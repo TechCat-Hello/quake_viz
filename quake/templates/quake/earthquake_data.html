@@ -1,0 +1,24 @@
+<!-- quake/templates/quake/earthquake_data.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earthquake Data</title>
+</head>
+<body>
+    <h1>Recent Earthquake Data</h1>
+    <ul>
+        {% for earthquake in data.features %}
+            <li>
+                <strong>{{ earthquake.properties.title }}</strong><br>
+                Location: {{ earthquake.properties.place }}<br>
+                Magnitude: {{ earthquake.properties.mag }}<br>
+                Time: {{ earthquake.properties.time }}
+            </li>
+        {% empty %}
+            <li>No data available</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
