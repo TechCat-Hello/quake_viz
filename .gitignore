@@ -90,6 +90,9 @@ ipython_config.py
 # 仮想環境
 venv/
 .env
+.venv
+.devcontainer/
+
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
