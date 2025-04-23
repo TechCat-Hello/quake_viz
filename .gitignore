@@ -61,6 +61,11 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# Django ローカル設定ファイル
+*.sqlite3
+/media/
+/staticfiles/
+
 # Flask stuff:
 instance/
 .webassets-cache
@@ -81,6 +86,10 @@ target/
 # IPython
 profile_default/
 ipython_config.py
+
+# 仮想環境
+venv/
+.env
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
