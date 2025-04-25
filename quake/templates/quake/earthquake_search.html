@@ -1,0 +1,56 @@
+<h2>地震検索</h2>
+
+<form method="get">
+  {{ form.start_year.label }}: {{ form.start_year }}<br>
+  {{ form.end_year.label }}: {{ form.end_year }}<br><br>
+
+  {{ form.min_magnitude.label }}: {{ form.min_magnitude }}
+  <span id="min_mag_val">{{ form.min_magnitude.value }}</span><br>
+
+  {{ form.max_magnitude.label }}: {{ form.max_magnitude }}
+  <span id="max_mag_val">{{ form.max_magnitude.value }}</span><br><br>
+
+  {{ form.prefecture.label }}: {{ form.prefecture }}<br><br>
+
+  <button type="submit">検索</button>
+</form>
+
+<script>
+  // スライダーの値をリアルタイムで表示
+  document.addEventListener('DOMContentLoaded', function() {
+    const minSlider = document.querySelector('[name=min_magnitude]');
+    const maxSlider = document.querySelector('[name=max_magnitude]');
+    const minDisplay = document.getElementById('min_mag_val');
+    const maxDisplay = document.getElementById('max_mag_val');
+
+    if (minSlider && minDisplay) {
+      minDisplay.innerText = minSlider.value;
+      minSlider.addEventListener('input', () => {
+        minDisplay.innerText = minSlider.value;
+      });
+    }
+
+    if (maxSlider && maxDisplay) {
+      maxDisplay.innerText = maxSlider.value;
+      maxSlider.addEventListener('input', () => {
+        maxDisplay.innerText = maxSlider.value;
+      });
+    }
+  });
+</script>
+
+{% if results %}
+  <h3>検索結果</h3>
+  <ul>
+    {% for quake in results %}
+      <li>
+        {{ quake.date }} - M{{ quake.magnitude }} - {{ quake.location }}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  {% if form.is_bound %}
+    <p>該当する地震データは見つかりませんでした。</p>
+  {% endif %}
+{% endif %}
+
