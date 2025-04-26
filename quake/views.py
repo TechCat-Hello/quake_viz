@@ -3,12 +3,22 @@ import requests
 from django.contrib.auth.decorators import login_required
 from .forms import EarthquakeSearchForm
 from .models import Earthquake
-from datetime import datetime
+from datetime import datetime, timezone
+import json  #地図表示不具合対応中の追加
+
 
 # 直近の地震データをUSGS APIから取得・地図表示に使える形で渡す
 def earthquake_data_view(request):
     url = 'https://earthquake.usgs.gov/fdsnws/event/1/query'
-    params = {'format': 'geojson', 'limit': 5}
+    params = {
+        'format': 'geojson',
+        'limit': 20,
+        'minlatitude': 20,
+        'maxlatitude': 46,
+        'minlongitude': 122,
+        'maxlongitude': 150,
+        'orderby': 'time',
+    }
     response = requests.get(url, params=params)
 
     earthquakes = []
@@ -20,12 +30,14 @@ def earthquake_data_view(request):
             earthquakes.append({
                 'place': props['place'],
                 'magnitude': props['mag'],
-                'time': datetime.utcfromtimestamp(props['time'] / 1000),
+                'time': datetime.fromtimestamp(props['time'] / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
                 'longitude': coords[0],
                 'latitude': coords[1],
             })
     else:
         earthquakes = []
+
+    print(json.dumps(earthquakes, indent=2, ensure_ascii=False))  # ←確認用ログ
 
     return render(request, 'quake/earthquake_data.html', {'earthquakes': earthquakes})
 

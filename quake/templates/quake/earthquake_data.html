@@ -21,6 +21,11 @@
   <h2>最新の地震マップ</h2>
   <div id="map"></div>
 
+  <!-- 地震データをJSON形式で埋め込む -->
+  {{ earthquakes|json_script:"earthquakes-data" }}
+
+  
+
   <script>
     const map = L.map('map').setView([36.2048, 138.2529], 5); // 日本中心
 
@@ -28,14 +33,16 @@
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    const earthquakes = {{ earthquakes|safe }};
+    // JSONデータをJavaScriptに取り込む
+    const earthquakes = JSON.parse(document.getElementById('earthquakes-data').textContent);
 
     earthquakes.forEach(eq => {
-      L.marker([eq.latitude, eq.longitude])
-        .addTo(map)
-        .bindPopup(`<b>${eq.place}</b><br>マグニチュード: ${eq.magnitude}<br>${eq.time}`);
-    });
+  console.log(eq.latitude, eq.longitude); // データを確認
+  L.marker([eq.latitude, eq.longitude])
+    .addTo(map)
+    .bindPopup(`<b>${eq.place}</b><br>マグニチュード: ${eq.magnitude}<br>${eq.time}`);
+});
+
   </script>
 </body>
 </html>
-
