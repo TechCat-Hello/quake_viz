@@ -15,45 +15,63 @@
       width: 100%;
       margin-top: 1em;
     }
+    .search-info {
+      margin-top: 1em;
+    }
   </style>
 </head>
 <body>
   <h2>最新の地震マップ</h2>
+
+  <!-- 検索条件の表示 -->
+  <div class="search-info">
+    <p>検索条件:</p>
+    <ul>
+      <li>期間: {{ start_year }}年 ～ {{ end_year }}年</li>
+      <li>マグニチュード: {{ min_magnitude }} ～ {{ max_magnitude }}</li>
+      <li>都道府県: {{ prefecture }}</li>
+    </ul>
+  </div>
+
+  <!-- 地図表示エリア -->
   <div id="map"></div>
 
   <!-- 地震データをJSON形式で埋め込む -->
   {{ earthquakes|json_script:"earthquakes-data" }}
 
-  
-
   <script>
+    // 地図を作成し、日本の範囲に合わせてズーム設定
     const map = L.map('map');
 
-const bounds = [
-  [20.4, 122.5], // 南西（沖縄周辺）
-  [45.6, 147.0]  // 北東（北海道・千島列島付近）
-];
+    const bounds = [
+      [20.4, 122.5], // 南西（沖縄周辺）
+      [45.6, 147.0]  // 北東（北海道・千島列島付近）
+    ];
 
-map.fitBounds(bounds);
+    // 地図の範囲を設定
+    map.fitBounds(bounds);
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
-
-
-
-
+    // OpenStreetMapのタイルレイヤーを設定
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
     // JSONデータをJavaScriptに取り込む
     const earthquakes = JSON.parse(document.getElementById('earthquakes-data').textContent);
 
+    // 地震データをマップ上にプロット
     earthquakes.forEach(eq => {
-  console.log(eq.latitude, eq.longitude); // データを確認
-  L.marker([eq.latitude, eq.longitude])
-    .addTo(map)
-    .bindPopup(`<b>${eq.place}</b><br>マグニチュード: ${eq.magnitude}<br>${eq.time}`);
-});
-
+      L.marker([eq.latitude, eq.longitude])
+        .addTo(map)
+        .bindPopup(`
+          <b>${eq.place}</b><br>
+          マグニチュード: ${eq.magnitude.toFixed(1)}<br>  <!-- 小数点1位で表示 -->
+          発生時刻: ${eq.time}
+        `);
+    });
   </script>
 </body>
 </html>
+
+
+

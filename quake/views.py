@@ -4,12 +4,19 @@ from django.contrib.auth.decorators import login_required
 from .forms import EarthquakeSearchForm
 from .models import Earthquake
 from datetime import datetime, timezone
-import json  #地図表示不具合対応中の追加
-
+import json  # 地図表示不具合対応中の追加
 
 # 直近の地震データをUSGS APIから取得・地図表示に使える形で渡す
 def earthquake_data_view(request):
     url = 'https://earthquake.usgs.gov/fdsnws/event/1/query'
+    
+    # 検索フォームの条件を取得
+    start_year = request.GET.get('start_year', 2020)
+    end_year = request.GET.get('end_year', 2025)
+    min_magnitude = request.GET.get('min_magnitude', 4.1)
+    max_magnitude = request.GET.get('max_magnitude', 10.2)
+    prefecture = request.GET.get('prefecture', '')
+
     params = {
         'format': 'geojson',
         'limit': 20,
@@ -18,7 +25,11 @@ def earthquake_data_view(request):
         'minlongitude': 122,
         'maxlongitude': 150,
         'orderby': 'time',
+        'starttime': f'{start_year}-01-01',
+        'endtime': f'{end_year}-12-31',
     }
+
+    # APIから地震データを取得
     response = requests.get(url, params=params)
 
     earthquakes = []
@@ -37,14 +48,22 @@ def earthquake_data_view(request):
     else:
         earthquakes = []
 
-    print(json.dumps(earthquakes, indent=2, ensure_ascii=False))  # ←確認用ログ
+    # 検索条件をテンプレートに渡す
+    return render(request, 'quake/earthquake_data.html', {
+        'earthquakes': earthquakes,
+        'start_year': start_year,
+        'end_year': end_year,
+        'min_magnitude': min_magnitude,
+        'max_magnitude': max_magnitude,
+        'prefecture': prefecture,
+    })
 
-    return render(request, 'quake/earthquake_data.html', {'earthquakes': earthquakes})
 
 # マイページ（ログインが必要）
 @login_required
 def mypage_view(request):
     return render(request, 'mypage.html')
+
 
 # 地震検索ページ（年・マグニチュード・都道府県で絞り込み）
 def earthquake_search(request):
@@ -58,6 +77,7 @@ def earthquake_search(request):
         max_mag = form.cleaned_data['max_magnitude']
         prefecture = form.cleaned_data['prefecture']
 
+        # Earthquakeモデルからデータをフィルタリング
         results = Earthquake.objects.filter(
             date__year__gte=start_year,
             date__year__lte=end_year,
@@ -72,4 +92,5 @@ def earthquake_search(request):
         'form': form,
         'results': results,
     })
+
 
