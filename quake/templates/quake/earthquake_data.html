@@ -1,13 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <title>地震マップ</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地震マップ</title>
 
-  <!-- LeafletのCSSとJSをCDNで読み込む -->
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- LeafletのCSSとJS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- SheetJS（Excelダウンロード用） -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
   <style>
     #map {
@@ -15,68 +21,70 @@
       width: 100%;
       margin-top: 1em;
     }
-    .search-info {
-      margin-top: 1em;
+    body {
+      padding: 20px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 2em;
-    }
-    table, th, td {
-      border: 1px solid black;
-    }
-    th, td {
-      padding: 8px;
-      text-align: left;
+    .download-buttons {
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h2>最新の地震マップ</h2>
 
-  <!-- 検索条件の表示 -->
-  <div class="search-info">
-    <p>検索条件:</p>
-    <ul>
-      <li>期間: {{ start_year }}年 ～ {{ end_year }}年</li>
-      <li>マグニチュード: {{ min_magnitude }} ～ {{ max_magnitude }}</li>
-      <li>都道府県: {{ prefecture }}</li>
-    </ul>
+  <div class="container">
+    <h2 class="mb-4">検索結果：地震マップ</h2>
+
+    <!-- 検索条件 -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">検索条件</h5>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">期間: {{ start_year }}年 ～ {{ end_year }}年</li>
+          <li class="list-group-item">マグニチュード: {{ min_magnitude }} ～ {{ max_magnitude }}</li>
+          <li class="list-group-item">都道府県: {{ prefecture }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 地図表示エリア -->
+    <div id="map" class="mb-4"></div>
+
+    <!-- 地震データをJSON形式で埋め込む -->
+    {{ earthquakes|json_script:"earthquakes-data" }}
+
+    <!-- 地震データ一覧 -->
+    <h3>地震データの一覧</h3>
+    <div class="table-responsive">
+      <table id="earthquake-table" class="table table-bordered table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>場所</th>
+            <th>マグニチュード</th>
+            <th>発生時刻</th>
+            <th>緯度</th>
+            <th>経度</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- JavaScriptで地震データを表示 -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ダウンロードボタン -->
+    <div class="download-buttons">
+      <button class="btn btn-primary me-2" onclick="downloadCSV()">CSVでダウンロード</button>
+      <button class="btn btn-success" onclick="downloadExcel()">Excelでダウンロード</button>
+    </div>
   </div>
-
-  <!-- 地図表示エリア -->
-  <div id="map"></div>
-
-  <!-- 地震データをJSON形式で埋め込む -->
-  {{ earthquakes|json_script:"earthquakes-data" }}
-
-  <h3>地震データの一覧</h3>
-  <table id="earthquake-table">
-    <thead>
-      <tr>
-        <th>場所</th>
-        <th>マグニチュード</th>
-        <th>発生時刻</th>
-        <th>緯度</th>
-        <th>経度</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- JavaScriptで地震データを表示 -->
-    </tbody>
-  </table>
 
   <script>
     // 地図を作成し、日本の範囲に合わせてズーム設定
     const map = L.map('map');
-
     const bounds = [
       [20.4, 122.5], // 南西（沖縄周辺）
       [45.6, 147.0]  // 北東（北海道・千島列島付近）
     ];
-
-    // 地図の範囲を設定
     map.fitBounds(bounds);
 
     // OpenStreetMapのタイルレイヤーを設定
@@ -93,7 +101,7 @@
         .addTo(map)
         .bindPopup(`
           <b>${eq.place}</b><br>
-          マグニチュード: ${eq.magnitude.toFixed(1)}<br>  <!-- 小数点1位で表示 -->
+          マグニチュード: ${eq.magnitude.toFixed(1)}<br>
           発生時刻: ${eq.time}
         `);
 
@@ -110,9 +118,48 @@
       `;
       tableBody.appendChild(row);
     });
+
+    // CSVダウンロード機能
+    function downloadCSV() {
+      let csv = "場所,マグニチュード,発生時刻,緯度,経度\n";
+      earthquakes.forEach(eq => {
+        csv += `"${eq.place}",${eq.magnitude.toFixed(1)},"${eq.time}",${eq.latitude},${eq.longitude}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "earthquake_data.csv");
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Excelダウンロード機能
+    function downloadExcel() {
+      const worksheetData = earthquakes.map(eq => ({
+        場所: eq.place,
+        マグニチュード: eq.magnitude.toFixed(1),
+        発生時刻: eq.time,
+        緯度: eq.latitude,
+        経度: eq.longitude
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "地震データ");
+      XLSX.writeFile(workbook, "earthquake_data.xlsx");
+    }
   </script>
+
+  <!-- Bootstrap 5 JS（必要なら） -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+
 
 
 
