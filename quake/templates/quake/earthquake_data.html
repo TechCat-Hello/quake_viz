@@ -18,6 +18,18 @@
     .search-info {
       margin-top: 1em;
     }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2em;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
@@ -38,6 +50,22 @@
 
   <!-- 地震データをJSON形式で埋め込む -->
   {{ earthquakes|json_script:"earthquakes-data" }}
+
+  <h3>地震データの一覧</h3>
+  <table id="earthquake-table">
+    <thead>
+      <tr>
+        <th>場所</th>
+        <th>マグニチュード</th>
+        <th>発生時刻</th>
+        <th>緯度</th>
+        <th>経度</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- JavaScriptで地震データを表示 -->
+    </tbody>
+  </table>
 
   <script>
     // 地図を作成し、日本の範囲に合わせてズーム設定
@@ -68,10 +96,24 @@
           マグニチュード: ${eq.magnitude.toFixed(1)}<br>  <!-- 小数点1位で表示 -->
           発生時刻: ${eq.time}
         `);
+
+      // 地震データをテーブルに追加
+      const tableBody = document.querySelector("#earthquake-table tbody");
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${eq.place}</td>
+        <td>${eq.magnitude.toFixed(1)}</td>
+        <td>${eq.time}</td>
+        <td>${eq.latitude}</td>
+        <td>${eq.longitude}</td>
+      `;
+      tableBody.appendChild(row);
     });
   </script>
 </body>
 </html>
+
 
 
 
