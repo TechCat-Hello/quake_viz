@@ -1,56 +1,193 @@
-<h2>地震検索</h2>
+{% load widget_tweaks %}
 
-<form method="get">
-  {{ form.start_year.label }}: {{ form.start_year }}<br>
-  {{ form.end_year.label }}: {{ form.end_year }}<br><br>
+<!DOCTYPE html>
+<html>
+<head>
+<title>地震検索</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 50px;
+}
 
-  {{ form.min_magnitude.label }}: {{ form.min_magnitude }}
-  <span id="min_mag_val">{{ form.min_magnitude.value }}</span><br>
+.container {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 400px;
+}
 
-  {{ form.max_magnitude.label }}: {{ form.max_magnitude }}
-  <span id="max_mag_val">{{ form.max_magnitude.value }}</span><br><br>
+h2, h3 {
+  text-align: center;
+  color: #333;
+}
 
-  {{ form.prefecture.label }}: {{ form.prefecture }}<br><br>
+form {
+  display: flex;
+  flex-direction: column;
+}
 
-  <button type="submit">検索</button>
-</form>
+label {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+/* 通常のセレクトボックス */
+select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* 開始年・終了年だけ特別に大きくする */
+select[name="start_year"], select[name="end_year"] {
+  font-size: 32px;
+  padding-top: 48px;  /* 上のパディングを増やす */
+  padding-bottom: 48px; /* 下のパディングを増やす */
+  height: 176px; /* 高さを2倍に設定 */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+button {
+  margin-top: 15px;
+  padding: 12px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background-color: #eef;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+p {
+  text-align: center;
+  color: #777;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>地震検索</h2>
+
+  <form method="get">
+    <label>{{ form.start_year.label }}</label>
+    {{ form.start_year|add_class:"custom-select" }}  <!-- widget_tweaks を使用してクラス追加 -->
+
+    <label>{{ form.end_year.label }}</label>
+    {{ form.end_year|add_class:"custom-select" }}  <!-- widget_tweaks を使用してクラス追加 -->
+
+    <label>{{ form.min_magnitude.label }}</label>
+    {{ form.min_magnitude }}
+    <span id="min_mag_val">{{ form.min_magnitude.value }}</span>
+
+    <label>{{ form.max_magnitude.label }}</label>
+    {{ form.max_magnitude }}
+    <span id="max_mag_val">{{ form.max_magnitude.value }}</span>
+
+    <label>{{ form.prefecture.label }}</label>
+    {{ form.prefecture }}
+
+    <button type="submit">検索</button>
+  </form>
+
+  {% if results %}
+    <h3>検索結果</h3>
+    <ul>
+      {% for quake in results %}
+        <li>{{ quake.date }} - M{{ quake.magnitude }} - {{ quake.location }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {% if form.is_bound %}
+      <p>該当する地震データは見つかりませんでした。</p>
+    {% endif %}
+  {% endif %}
+</div>
 
 <script>
-  // スライダーの値をリアルタイムで表示
-  document.addEventListener('DOMContentLoaded', function() {
-    const minSlider = document.querySelector('[name=min_magnitude]');
-    const maxSlider = document.querySelector('[name=max_magnitude]');
-    const minDisplay = document.getElementById('min_mag_val');
-    const maxDisplay = document.getElementById('max_mag_val');
+// スライダーの値をリアルタイムで表示
+document.addEventListener('DOMContentLoaded', function() {
+  const minSlider = document.querySelector('[name=min_magnitude]');
+  const maxSlider = document.querySelector('[name=max_magnitude]');
+  const minDisplay = document.getElementById('min_mag_val');
+  const maxDisplay = document.getElementById('max_mag_val');
 
-    if (minSlider && minDisplay) {
+  if (minSlider && minDisplay) {
+    minDisplay.innerText = minSlider.value;
+    minSlider.addEventListener('input', () => {
       minDisplay.innerText = minSlider.value;
-      minSlider.addEventListener('input', () => {
-        minDisplay.innerText = minSlider.value;
-      });
-    }
+    });
+  }
 
-    if (maxSlider && maxDisplay) {
+  if (maxSlider && maxDisplay) {
+    maxDisplay.innerText = maxSlider.value;
+    maxSlider.addEventListener('input', () => {
       maxDisplay.innerText = maxSlider.value;
-      maxSlider.addEventListener('input', () => {
-        maxDisplay.innerText = maxSlider.value;
-      });
-    }
-  });
+    });
+  }
+});
 </script>
 
-{% if results %}
-  <h3>検索結果</h3>
-  <ul>
-    {% for quake in results %}
-      <li>
-        {{ quake.date }} - M{{ quake.magnitude }} - {{ quake.location }}
-      </li>
-    {% endfor %}
-  </ul>
-{% else %}
-  {% if form.is_bound %}
-    <p>該当する地震データは見つかりませんでした。</p>
-  {% endif %}
-{% endif %}
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
 
