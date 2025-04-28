@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
+  <meta charset="UTF-8">
   <title>ログイン</title>
   <style>
     body {
@@ -35,7 +36,7 @@
     input[type="text"], input[type="password"] {
       width: 100%;
       padding: 10px;
-      margin: 5px 0 15px;
+      margin: 5px 0 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
@@ -48,6 +49,7 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      margin-top: 20px;
     }
 
     input[type="submit"]:hover {
@@ -75,7 +77,42 @@
     .signup-link button:hover {
       background-color: #1976D2;
     }
+
+    /* チェックボックスとラベルの位置調整 */
+    .show-password {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      font-size: 15px;
+      font-family: Arial, sans-serif; /* ← ここを追加！ */
+    }
+
+    .show-password input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    .show-password label {
+      margin: 0;
+      font-weight: normal;
+      text-align: left;
+    }
   </style>
+
+  <script>
+    function togglePassword() {
+      var passwordField = document.getElementById('password');
+      var checkbox = document.getElementById('show-password');
+      
+      if (checkbox.checked) {
+        passwordField.type = 'text';
+      } else {
+        passwordField.type = 'password';
+      }
+    }
+  </script>
+
 </head>
 <body>
   <div class="login-container">
@@ -83,9 +120,17 @@
     <form method="post">
       {% csrf_token %}
       <label for="username">ユーザー名:</label>
-      <input type="text" name="username" required><br>
+      <input type="text" name="username" id="username" required><br>
+      
       <label for="password">パスワード:</label>
-      <input type="password" name="password" required><br>
+      <input type="password" name="password" id="password" required><br>
+
+      <!-- パスワード表示用チェックボックス -->
+      <div class="show-password">
+        <input type="checkbox" id="show-password" onclick="togglePassword()">
+        <label for="show-password">パスワードを表示する</label>
+      </div>
+
       <input type="submit" value="ログイン">
     </form>
 
@@ -99,5 +144,9 @@
   </div>
 </body>
 </html>
+
+
+
+
 
 
