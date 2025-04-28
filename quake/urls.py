@@ -7,6 +7,8 @@ urlpatterns = [
     path('earthquake/', views.earthquake_data_view, name='earthquake_data'),
     path('mypage/', mypage_view, name='mypage'),
     path('search/', views.earthquake_search, name='earthquake_search'),
+    path('login/', views.login_view, name='login'),
+    path('signup/', views.signup_view, name='signup'),
 
 ]
 

@@ -92,5 +92,12 @@ def earthquake_search(request):
         'form': form,
         'results': results,
     })
+# ログインページ表示用
+def login_view(request):
+    return render(request, 'login.html')
+
+def signup_view(request):
+    return render(request, 'signup.html')
+
 
 
