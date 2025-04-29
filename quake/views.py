@@ -1,10 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import requests
 from django.contrib.auth.decorators import login_required
 from .forms import EarthquakeSearchForm
 from .models import Earthquake
 from datetime import datetime, timezone
 import json  # 地図表示不具合対応中の追加
+from django.contrib.auth.forms import UserCreationForm
 
 # 直近の地震データをUSGS APIから取得・地図表示に使える形で渡す
 def earthquake_data_view(request):
@@ -97,7 +98,14 @@ def login_view(request):
     return render(request, 'login.html')
 
 def signup_view(request):
-    return render(request, 'signup.html')
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')  # ログインページなどにリダイレクト
+    else:
+        form = UserCreationForm()
+    return render(request, 'signup.html', {'form': form})
 
 
 

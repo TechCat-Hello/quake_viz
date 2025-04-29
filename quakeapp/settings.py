@@ -119,3 +119,7 @@ LOGIN_REDIRECT_URL = '/'  # ログイン後のトップページ
 LOGOUT_REDIRECT_URL = '/login/'  # ログアウト後のリダイレクト先
 LOGIN_REDIRECT_URL = '/mypage/'
 
+#開発用のメールバックエンド
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
