@@ -1,19 +1,20 @@
 from django.shortcuts import render, redirect
-import requests
 from django.contrib.auth.decorators import login_required
-from .forms import EarthquakeSearchForm, CustomUserCreationForm  # ← ここを変更
+from .forms import EarthquakeSearchForm, CustomUserCreationForm
 from .models import Earthquake, SearchHistory
 from datetime import datetime, timezone
-import json
+import requests
 
-# 直近の地震データをUSGS APIから取得・地図表示に使える形で渡す
+# USGS APIから地震データを取得して地図に表示
+@login_required
 def earthquake_data_view(request):
     url = 'https://earthquake.usgs.gov/fdsnws/event/1/query'
 
-    start_year = request.GET.get('start_year', 2020)
-    end_year = request.GET.get('end_year', 2025)
-    min_magnitude = request.GET.get('min_magnitude', 4.1)
-    max_magnitude = request.GET.get('max_magnitude', 10.2)
+    # GETリクエストからパラメータ取得
+    start_year = request.GET.get('start_year', '2020')
+    end_year = request.GET.get('end_year', '2025')
+    min_magnitude = request.GET.get('min_magnitude', '4.1')
+    max_magnitude = request.GET.get('max_magnitude', '10.2')
     prefecture = request.GET.get('prefecture', '')
 
     params = {
@@ -26,6 +27,8 @@ def earthquake_data_view(request):
         'orderby': 'time',
         'starttime': f'{start_year}-01-01',
         'endtime': f'{end_year}-12-31',
+        'minmagnitude': min_magnitude,
+        'maxmagnitude': max_magnitude,
     }
 
     response = requests.get(url, params=params)
@@ -43,8 +46,10 @@ def earthquake_data_view(request):
                 'longitude': coords[0],
                 'latitude': coords[1],
             })
-    else:
-        earthquakes = []
+
+    if request.user.is_authenticated:
+        keyword = f"{start_year}-{end_year}年, M{min_magnitude}-{max_magnitude}, {prefecture}"
+        SearchHistory.objects.create(user=request.user, keyword=keyword)
 
     return render(request, 'quake/earthquake_data.html', {
         'earthquakes': earthquakes,
@@ -56,18 +61,20 @@ def earthquake_data_view(request):
     })
 
 
-# マイページ（ログインが必要）
+# マイページ（ログイン必須）
 @login_required
 def mypage_view(request):
     histories = SearchHistory.objects.filter(user=request.user).order_by('-searched_at')
     return render(request, 'mypage.html', {'histories': histories})
 
 
-# 地震検索ページ
+# 検索ページ：DBから検索し履歴も保存
 @login_required
 def earthquake_search(request):
-    form = EarthquakeSearchForm(request.GET or None)
-    results = None
+    form = EarthquakeSearchForm()
+    return render(request, 'quake/earthquake_search.html', {'form': form})
+    #form = EarthquakeSearchForm(request.GET or None)
+    #results = None
 
     if form.is_valid():
         start_year = form.cleaned_data['start_year']
@@ -94,21 +101,22 @@ def earthquake_search(request):
     })
 
 
-# ログインページ表示用
+# ログインページ
 def login_view(request):
     return render(request, 'login.html')
 
 
-# 新規登録ページ表示・処理
+# 新規登録ページ
 def signup_view(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)  # ← ここを変更
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect('login')
     else:
-        form = CustomUserCreationForm()  # ← ここも変更
+        form = CustomUserCreationForm()
     return render(request, 'signup.html', {'form': form})
+
 
 
 

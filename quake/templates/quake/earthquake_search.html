@@ -119,7 +119,8 @@ p {
 <div class="container">
   <h2>地震検索</h2>
 
-  <form method="get">
+  <form method="get" action="{% url 'earthquake_data' %}">
+
     <label>{{ form.start_year.label }}</label>
     {{ form.start_year|add_class:"custom-select" }}  <!-- widget_tweaks を使用してクラス追加 -->
 
@@ -180,6 +181,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+
+
+
+
 
 
 
