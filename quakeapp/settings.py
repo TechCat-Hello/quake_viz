@@ -122,4 +122,6 @@ LOGIN_REDIRECT_URL = '/mypage/'
 #開発用のメールバックエンド
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+LOGIN_URL = '/login/'
+
 

@@ -1,17 +1,15 @@
 from django.shortcuts import render, redirect
 import requests
 from django.contrib.auth.decorators import login_required
-from .forms import EarthquakeSearchForm
-from .models import Earthquake
+from .forms import EarthquakeSearchForm, CustomUserCreationForm  # ← ここを変更
+from .models import Earthquake, SearchHistory
 from datetime import datetime, timezone
-import json  # 地図表示不具合対応中の追加
-from django.contrib.auth.forms import UserCreationForm
+import json
 
 # 直近の地震データをUSGS APIから取得・地図表示に使える形で渡す
 def earthquake_data_view(request):
     url = 'https://earthquake.usgs.gov/fdsnws/event/1/query'
-    
-    # 検索フォームの条件を取得
+
     start_year = request.GET.get('start_year', 2020)
     end_year = request.GET.get('end_year', 2025)
     min_magnitude = request.GET.get('min_magnitude', 4.1)
@@ -30,7 +28,6 @@ def earthquake_data_view(request):
         'endtime': f'{end_year}-12-31',
     }
 
-    # APIから地震データを取得
     response = requests.get(url, params=params)
 
     earthquakes = []
@@ -49,7 +46,6 @@ def earthquake_data_view(request):
     else:
         earthquakes = []
 
-    # 検索条件をテンプレートに渡す
     return render(request, 'quake/earthquake_data.html', {
         'earthquakes': earthquakes,
         'start_year': start_year,
@@ -63,10 +59,12 @@ def earthquake_data_view(request):
 # マイページ（ログインが必要）
 @login_required
 def mypage_view(request):
-    return render(request, 'mypage.html')
+    histories = SearchHistory.objects.filter(user=request.user).order_by('-searched_at')
+    return render(request, 'mypage.html', {'histories': histories})
 
 
-# 地震検索ページ（年・マグニチュード・都道府県で絞り込み）
+# 地震検索ページ
+@login_required
 def earthquake_search(request):
     form = EarthquakeSearchForm(request.GET or None)
     results = None
@@ -78,34 +76,43 @@ def earthquake_search(request):
         max_mag = form.cleaned_data['max_magnitude']
         prefecture = form.cleaned_data['prefecture']
 
-        # Earthquakeモデルからデータをフィルタリング
         results = Earthquake.objects.filter(
             date__year__gte=start_year,
             date__year__lte=end_year,
             magnitude__gte=min_mag,
             magnitude__lte=max_mag,
         )
-
         if prefecture:
             results = results.filter(location__icontains=prefecture)
+
+        keyword = f"{start_year}-{end_year}年, M{min_mag}-{max_mag}, {prefecture}"
+        SearchHistory.objects.create(user=request.user, keyword=keyword)
 
     return render(request, 'quake/earthquake_search.html', {
         'form': form,
         'results': results,
     })
+
+
 # ログインページ表示用
 def login_view(request):
     return render(request, 'login.html')
 
+
+# 新規登録ページ表示・処理
 def signup_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)  # ← ここを変更
         if form.is_valid():
             form.save()
-            return redirect('login')  # ログインページなどにリダイレクト
+            return redirect('login')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()  # ← ここも変更
     return render(request, 'signup.html', {'form': form})
+
+
+
+
 
 
 
