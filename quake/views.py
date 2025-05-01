@@ -109,13 +109,16 @@ def earthquake_data_view(request):
         for feature in data['features']:
             coords = feature['geometry']['coordinates']
             props = feature['properties']
+        # ここで「?」を「o」に置換
+            place = props['place'].replace("?", "o")
             earthquakes.append({
-                'place': props['place'],
+                'place': place,
                 'magnitude': props['mag'],
                 'time': datetime.fromtimestamp(props['time'] / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
                 'longitude': coords[0],
                 'latitude': coords[1],
-            })
+        })
+
 
     if request.user.is_authenticated:
         keyword = f"{start_year}-{end_year}年, M{min_magnitude}-{max_magnitude}, {prefecture}"
