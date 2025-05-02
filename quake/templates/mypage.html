@@ -2,15 +2,53 @@
 <html>
 <head>
     <title>マイページ</title>
+    <style>
+        .history-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .history-keyword {
+            flex: 1;
+        }
+        .history-btn {
+            margin-left: 12px;
+        }
+    </style>
 </head>
 <body>
     <h1>ようこそ {{ user.username }} さん！</h1>
     <p>このページはログインユーザー専用です。</p>
 
     <h2>検索履歴</h2>
-    <ul>
+    <ul style="list-style: none; padding: 0;">
         {% for history in histories %}
-            <li>{{ history.keyword }}（{{ history.searched_at|date:"Y年m月d日 H:i" }}）</li>
+            <li>
+                <div class="history-row">
+                    <span class="history-keyword">
+                        {{ history.keyword }}（{{ history.searched_at|date:"Y年m月d日 H:i" }}）
+                    </span>
+
+                    <!-- デバッグ用に値を表示 -->
+                    <span>
+                        start_year: {{ history.start_year }},
+                        end_year: {{ history.end_year }},
+                        min_mag: {{ history.min_magnitude }},
+                        max_mag: {{ history.max_magnitude }},
+                        prefecture: {{ history.prefecture }}
+                    </span>
+
+                    <form method="get" action="{% url 'earthquake_data' %}" class="history-btn">
+                        <input type="hidden" name="start_year" value="{{ history.start_year }}">
+                        <input type="hidden" name="end_year" value="{{ history.end_year }}">
+                        <input type="hidden" name="min_magnitude" value="{{ history.min_magnitude }}">
+                        <input type="hidden" name="max_magnitude" value="{{ history.max_magnitude }}">
+                        <input type="hidden" name="prefecture" value="{{ history.prefecture }}">
+                        <button type="submit">検索結果を表示</button>
+                    </form>
+                    
+                </div>
+            </li>
         {% empty %}
             <li>検索履歴はまだありません。</li>
         {% endfor %}
@@ -21,4 +59,6 @@
     <a href="{% url 'earthquake_search' %}">地震検索ページへ</a>
 </body>
 </html>
+
+
 

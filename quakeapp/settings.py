@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'quake',
     'widget_tweaks',
+    'quakeapp',
 ]
 
 MIDDLEWARE = [

@@ -4,6 +4,8 @@ from .forms import EarthquakeSearchForm, CustomUserCreationForm
 from .models import Earthquake, SearchHistory
 from datetime import datetime, timezone
 import requests
+from django.views.generic import TemplateView
+from quakeapp.models import History
 
 PREFECTURE_COORDINATES = {
     '北海道': {'minlat': 41.3, 'maxlat': 45.5, 'minlon': 139.3, 'maxlon': 145.8},
@@ -63,10 +65,10 @@ def earthquake_data_view(request):
     url = 'https://earthquake.usgs.gov/fdsnws/event/1/query'
 
     # GETリクエストからパラメータ取得
-    start_year = request.GET.get('start_year', '2020')
-    end_year = request.GET.get('end_year', '2025')
-    min_magnitude = request.GET.get('min_magnitude', '4.1')
-    max_magnitude = request.GET.get('max_magnitude', '10.2')
+    start_year = safe_int(request.GET.get('start_year'), default=2000)  # デフォルト値は適宜
+    end_year = safe_int(request.GET.get('end_year'), default=2020)
+    min_magnitude = safe_int(request.GET.get('min_magnitude'), default=3)
+    max_magnitude = safe_int(request.GET.get('max_magnitude'), default=7)
     prefecture = request.GET.get('prefecture', '')
     
     # 都道府県から緯度経度を取得
@@ -137,15 +139,33 @@ def earthquake_data_view(request):
 # マイページ（ログイン必須）
 @login_required
 def mypage_view(request):
-    histories = SearchHistory.objects.filter(user=request.user).order_by('-searched_at')
+    if request.user.is_authenticated:
+        histories = History.objects.filter(user=request.user).order_by('-searched_at')
+    else:
+        histories = History.objects.none()
     return render(request, 'mypage.html', {'histories': histories})
-
 
 # 検索ページ：DBから検索し履歴も保存
 @login_required
 def earthquake_search(request):
-    form = EarthquakeSearchForm()
-    return render(request, 'quake/earthquake_search.html', {'form': form})
+    form = EarthquakeSearchForm(request.GET or None)
+    earthquakes = []
+    keyword = ''
+
+    if form.is_valid():
+        keyword = form.cleaned_data['keyword']
+        earthquakes = EarthquakeData.objects.filter(location__icontains=keyword)
+
+        # 履歴保存（GETパラメータ経由の検索のみ。履歴リンククリックは除く）
+        if request.GET.get('from_history') != '1':
+            SearchHistory.objects.create(user=request.user, keyword=keyword)
+
+    return render(request, 'quake/earthquake_search.html', {
+        'form': form,
+        'earthquakes': earthquakes,
+        'keyword': keyword,
+    })
+
     #form = EarthquakeSearchForm(request.GET or None)
     #results = None
 
@@ -189,6 +209,16 @@ def signup_view(request):
     else:
         form = CustomUserCreationForm()
     return render(request, 'signup.html', {'form': form})
+
+class EarthquakeData(TemplateView):
+    template_name = 'earthquake_data.html'
+    # get_context_dataなどをオーバーライドして検索条件でデータ取得
+
+def safe_int(val, default=None):
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return default
 
 
 

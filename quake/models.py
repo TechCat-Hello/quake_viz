@@ -8,7 +8,7 @@ class Earthquake(models.Model):
     # 他にも深さ、緯度経度など
 
 class SearchHistory(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quake_search_histories')
     keyword = models.CharField(max_length=255)
     searched_at = models.DateTimeField(auto_now_add=True)
 
