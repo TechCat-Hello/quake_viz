@@ -2,13 +2,22 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-# ---- 新しいユーザー登録フォーム（メールアドレス付き） ----
 class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
 
     class Meta:
         model = User
         fields = ("username", "email", "password1", "password2")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({'class': 'form-control'})
+        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
+        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -17,7 +26,7 @@ class CustomUserCreationForm(UserCreationForm):
             user.save()
         return user
 
-# ---- 地震検索フォーム（既存のまま） ----
+# ---- 地震検索フォーム（余白強化） ----
 PREFECTURE_CHOICES = [
     ('', '全て'),
     ('北海道', '北海道'), ('青森県', '青森県'), ('岩手県', '岩手県'),
@@ -39,8 +48,24 @@ PREFECTURE_CHOICES = [
 ]
 
 class EarthquakeSearchForm(forms.Form):
-    start_year = forms.IntegerField(label='開始年', min_value=1900, max_value=2100)
-    end_year = forms.IntegerField(label='終了年', min_value=1900, max_value=2100)
+    start_year = forms.IntegerField(
+        label='開始年',
+        min_value=1900,
+        max_value=2100,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control mb-4',
+            'placeholder': '例: 2011'
+        })
+    )
+    end_year = forms.IntegerField(
+        label='終了年',
+        min_value=1900,
+        max_value=2100,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control mb-4',
+            'placeholder': '例: 2012'
+        })
+    )
 
     min_magnitude = forms.FloatField(
         label='最小マグニチュード',
@@ -49,7 +74,8 @@ class EarthquakeSearchForm(forms.Form):
             'min': '0.0',
             'max': '10.0',
             'step': '0.1',
-            'oninput': 'document.getElementById("min_mag_val").innerText = this.value;'
+            'oninput': 'document.getElementById("min_mag_val").innerText = this.value;',
+            'class': 'form-range mb-4'
         }),
         initial=3.0
     )
@@ -61,7 +87,8 @@ class EarthquakeSearchForm(forms.Form):
             'min': '0.0',
             'max': '10.0',
             'step': '0.1',
-            'oninput': 'document.getElementById("max_mag_val").innerText = this.value;'
+            'oninput': 'document.getElementById("max_mag_val").innerText = this.value;',
+            'class': 'form-range mb-4'
         }),
         initial=7.0
     )
@@ -69,5 +96,10 @@ class EarthquakeSearchForm(forms.Form):
     prefecture = forms.ChoiceField(
         choices=PREFECTURE_CHOICES,
         required=False,
-        label='都道府県'
+        label='都道府県',
+        widget=forms.Select(attrs={
+            'class': 'form-select mb-4'
+        })
     )
+
+
