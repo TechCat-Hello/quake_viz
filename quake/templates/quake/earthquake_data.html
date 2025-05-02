@@ -25,13 +25,14 @@
       padding: 20px;
     }
     .download-buttons {
-      margin-top: 20px;
+      margin: 32px auto 0 auto;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
     }
-    .back-to-mypage {
-      position: fixed;
-      left: 20px;
-      bottom: 20px;
-      z-index: 1000;
+    .back-to-mypage-table {
+      margin-top: 16px;
+      text-align: left;
     }
     .back-link {
       color: #0d6efd;
@@ -93,16 +94,16 @@
       </table>
     </div>
 
-    <!-- ダウンロードボタン -->
+    <!-- ダウンロードボタン（表の下、中央揃え） -->
     <div class="download-buttons">
-      <button class="btn btn-primary me-2" onclick="downloadCSV()">CSVでダウンロード</button>
+      <button class="btn btn-primary" onclick="downloadCSV()">CSVでダウンロード</button>
       <button class="btn btn-success" onclick="downloadExcel()">Excelでダウンロード</button>
     </div>
-  </div>
 
-  <!-- ←マイページに戻るリンク -->
-  <div class="back-to-mypage">
-    <a href="/mypage" class="back-link">&larr;マイページに戻る</a>
+    <!-- マイページに戻るリンク（表の下・左下） -->
+    <div class="back-to-mypage-table">
+      <a href="/mypage" class="back-link">&larr;マイページに戻る</a>
+    </div>
   </div>
 
   <script>
@@ -172,6 +173,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
 
 
 
