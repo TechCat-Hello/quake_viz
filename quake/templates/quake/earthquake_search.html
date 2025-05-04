@@ -75,7 +75,6 @@ select {
   box-sizing: border-box;
 }
 
-
 /* 開始年・終了年の高さを倍に（100px） 
 select[name="start_year"], select[name="end_year"] {
   height: 100px;
@@ -143,6 +142,20 @@ p {
   text-align: center;
   color: #777;
 }
+
+/* ←マイページに戻る リンクのスタイル */
+.back-to-mypage {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  color: #0074d9;
+  text-decoration: underline;
+  font-size: 18px;
+  z-index: 200;
+}
+.back-to-mypage:hover {
+  color: #005fa3;
+}
 </style>
 </head>
 <body>
@@ -204,6 +217,9 @@ p {
   {% endif %}
 </div>
 
+<!-- ←マイページに戻る リンク -->
+<a href="{% url 'mypage' %}" class="back-to-mypage">←マイページに戻る</a>
+
 <script>
 // スライダーの値をリアルタイムで表示
 document.addEventListener('DOMContentLoaded', function() {
@@ -230,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+
 
 
 
