@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .forms import EarthquakeSearchForm, CustomUserCreationForm
-from .models import Earthquake, SearchHistory
+from .forms import EarthquakeSearchForm, CustomUserCreationForm 
 from datetime import datetime, timezone
 import requests
 from django.views.generic import TemplateView
 from quakeapp.models import History
+from datetime import datetime, timezone
+#from .models import Earthquake
+
 
 PREFECTURE_COORDINATES = {
     '北海道': {'minlat': 41.3, 'maxlat': 45.5, 'minlon': 139.3, 'maxlon': 145.8},
@@ -105,13 +107,13 @@ def earthquake_data_view(request):
         response = requests.get(url, params=params, timeout=10)
     except requests.exceptions.RequestException as e:
         earthquakes = []
+        response = None
 
     if response.status_code == 200:
         data = response.json()
         for feature in data['features']:
             coords = feature['geometry']['coordinates']
             props = feature['properties']
-        # ここで「?」を「o」に置換
             place = props['place'].replace("?", "o")
             earthquakes.append({
                 'place': place,
@@ -120,11 +122,18 @@ def earthquake_data_view(request):
                 'longitude': coords[0],
                 'latitude': coords[1],
         })
-
-
+            
+    # --- 履歴をHistoryモデルに保存 ---
     if request.user.is_authenticated:
-        keyword = f"{start_year}-{end_year}年, M{min_magnitude}-{max_magnitude}, {prefecture}"
-        SearchHistory.objects.create(user=request.user, keyword=keyword)
+        #keyword = f"{start_year}-{end_year}年, M{min_magnitude}-{max_magnitude}, {prefecture}"
+        History.objects.create(
+            user=request.user,
+            start_year=start_year,
+            end_year=end_year,
+            min_magnitude=min_magnitude,
+            max_magnitude=max_magnitude,
+            prefecture=prefecture
+    )
 
     return render(request, 'quake/earthquake_data.html', {
         'earthquakes': earthquakes,
@@ -135,14 +144,10 @@ def earthquake_data_view(request):
         'prefecture': prefecture,
     })
 
-
 # マイページ（ログイン必須）
 @login_required
 def mypage_view(request):
-    if request.user.is_authenticated:
-        histories = History.objects.filter(user=request.user).order_by('-searched_at')
-    else:
-        histories = History.objects.none()
+    histories = History.objects.filter(user=request.user).order_by('-searched_at')
     return render(request, 'mypage.html', {'histories': histories})
 
 # 検索ページ：DBから検索し履歴も保存
@@ -158,7 +163,11 @@ def earthquake_search(request):
 
         # 履歴保存（GETパラメータ経由の検索のみ。履歴リンククリックは除く）
         if request.GET.get('from_history') != '1':
-            SearchHistory.objects.create(user=request.user, keyword=keyword)
+            History.objects.create(
+                user=request.user,
+                keyword=keyword,
+                searched_at=datetime.now(timezone.utc)
+            )
 
     return render(request, 'quake/earthquake_search.html', {
         'form': form,
@@ -166,33 +175,11 @@ def earthquake_search(request):
         'keyword': keyword,
     })
 
-    #form = EarthquakeSearchForm(request.GET or None)
-    #results = None
-
-    if form.is_valid():
-        start_year = form.cleaned_data['start_year']
-        end_year = form.cleaned_data['end_year']
-        min_mag = form.cleaned_data['min_magnitude']
-        max_mag = form.cleaned_data['max_magnitude']
-        prefecture = form.cleaned_data['prefecture']
-
-        results = Earthquake.objects.filter(
-            date__year__gte=start_year,
-            date__year__lte=end_year,
-            magnitude__gte=min_mag,
-            magnitude__lte=max_mag,
-        )
-        if prefecture:
-            results = results.filter(location__icontains=prefecture)
-
-        keyword = f"{start_year}-{end_year}年, M{min_mag}-{max_mag}, {prefecture}"
-        SearchHistory.objects.create(user=request.user, keyword=keyword)
-
-    return render(request, 'quake/earthquake_search.html', {
-        'form': form,
-        'results': results,
-    })
-
+def safe_int(val, default=None):
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return default
 
 # ログインページ
 def login_view(request):
