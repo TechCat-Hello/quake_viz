@@ -57,6 +57,7 @@ PREFECTURE_COORDINATES = {
     '宮崎県': {'minlat': 31.8, 'maxlat': 32.8, 'minlon': 131.0, 'maxlon': 131.6},
     '鹿児島県': {'minlat': 30.0, 'maxlat': 31.8, 'minlon': 129.2, 'maxlon': 131.0},
     '沖縄県': {'minlat': 24.0, 'maxlat': 26.8, 'minlon': 122.9, 'maxlon': 128.4},
+    '全国': {'minlat': 20, 'maxlat': 46, 'minlon': 122, 'maxlon': 150},
 }
 
 
@@ -71,7 +72,7 @@ def earthquake_data_view(request):
     end_year = safe_int(request.GET.get('end_year'), default=2020)
     min_magnitude = safe_int(request.GET.get('min_magnitude'), default=3)
     max_magnitude = safe_int(request.GET.get('max_magnitude'), default=7)
-    prefecture = request.GET.get('prefecture', '')
+    prefecture = request.GET.get('prefecture', '全国')
     
     # 都道府県から緯度経度を取得
     coords = PREFECTURE_COORDINATES.get(prefecture, {
