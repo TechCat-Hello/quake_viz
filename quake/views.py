@@ -70,8 +70,8 @@ def earthquake_data_view(request):
     # GETリクエストからパラメータ取得
     start_year = safe_int(request.GET.get('start_year'), default=2000)  # デフォルト値は適宜
     end_year = safe_int(request.GET.get('end_year'), default=2020)
-    min_magnitude = safe_int(request.GET.get('min_magnitude'), default=3)
-    max_magnitude = safe_int(request.GET.get('max_magnitude'), default=7)
+    min_magnitude = safe_float(request.GET.get('min_magnitude'), default=3)
+    max_magnitude = safe_float(request.GET.get('max_magnitude'), default=7)
     prefecture = request.GET.get('prefecture', '全国')
     
     # 都道府県から緯度経度を取得
@@ -181,6 +181,13 @@ def safe_int(val, default=None):
         return int(val)
     except (ValueError, TypeError):
         return default
+    
+def safe_float(val, default=None):
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return default
+
 
 # ログインページ
 def login_view(request):
