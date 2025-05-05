@@ -1,5 +1,6 @@
 {% load widget_tweaks %}
 
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -156,6 +157,12 @@ p {
 .back-to-mypage:hover {
   color: #005fa3;
 }
+#year-error {
+  color: red;
+  text-align: center;
+  margin-bottom: 1em;
+  font-size: 1.1em;
+}
 </style>
 </head>
 <body>
@@ -171,7 +178,10 @@ p {
 <div class="container">
   <h2>地震検索</h2>
 
-  <form method="get" action="{% url 'earthquake_data' %}">
+  <!-- 年のエラー表示用 -->
+  <div id="year-error"></div>
+
+  <form id="earthquake-form" method="get" action="{% url 'earthquake_data' %}">
 
     <div class="form-group">
       <label>{{ form.start_year.label }}</label>
@@ -241,11 +251,40 @@ document.addEventListener('DOMContentLoaded', function() {
       maxDisplay.innerText = maxSlider.value;
     });
   }
+
+  // 年の前後チェック
+  const form = document.getElementById('earthquake-form');
+  const startYearSelect = document.querySelector('[name="start_year"]');
+  const endYearSelect = document.querySelector('[name="end_year"]');
+  const yearErrorDiv = document.getElementById('year-error');
+
+  if (form && startYearSelect && endYearSelect) {
+    form.addEventListener('submit', function(e) {
+      // 年を数値で取得
+      const startYear = parseInt(startYearSelect.value, 10);
+      const endYear = parseInt(endYearSelect.value, 10);
+
+      // 年が未選択の場合はチェックしない（必要に応じて調整）
+      if (isNaN(startYear) || isNaN(endYear)) {
+        yearErrorDiv.textContent = '';
+        return;
+      }
+
+      if (endYear < startYear) {
+        e.preventDefault();
+        yearErrorDiv.textContent = "終了年は開始年以降を選択してください。";
+        endYearSelect.focus();
+      } else {
+        yearErrorDiv.textContent = '';
+      }
+    });
+  }
 });
 </script>
 
 </body>
 </html>
+
 
 
 
