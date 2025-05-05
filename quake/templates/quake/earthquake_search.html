@@ -1,6 +1,5 @@
 {% load widget_tweaks %}
 
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -76,14 +75,6 @@ select {
   box-sizing: border-box;
 }
 
-/* 開始年・終了年の高さを倍に（100px） 
-select[name="start_year"], select[name="end_year"] {
-  height: 100px;
-  font-size: 24px;
-  padding: 24px 16px;
-}*/
-
-/* 都道府県だけフォント小さく・高さも調整 */
 select[name="prefecture"] {
   font-size: 16px !important;
   height: 48px !important;
@@ -163,6 +154,12 @@ p {
   margin-bottom: 1em;
   font-size: 1.1em;
 }
+#mag-error {
+  color: red;
+  text-align: center;
+  margin-bottom: 1em;
+  font-size: 1.1em;
+}
 </style>
 </head>
 <body>
@@ -180,6 +177,8 @@ p {
 
   <!-- 年のエラー表示用 -->
   <div id="year-error"></div>
+  <!-- マグニチュードのエラー表示用 -->
+  <div id="mag-error"></div>
 
   <form id="earthquake-form" method="get" action="{% url 'earthquake_data' %}">
 
@@ -252,30 +251,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // 年の前後チェック
+  // 年・マグニチュードの前後チェック
   const form = document.getElementById('earthquake-form');
   const startYearSelect = document.querySelector('[name="start_year"]');
   const endYearSelect = document.querySelector('[name="end_year"]');
   const yearErrorDiv = document.getElementById('year-error');
+  const magErrorDiv = document.getElementById('mag-error');
 
-  if (form && startYearSelect && endYearSelect) {
+
+  if (form) {
     form.addEventListener('submit', function(e) {
-      // 年を数値で取得
-      const startYear = parseInt(startYearSelect.value, 10);
-      const endYear = parseInt(endYearSelect.value, 10);
-
-      // 年が未選択の場合はチェックしない（必要に応じて調整）
-      if (isNaN(startYear) || isNaN(endYear)) {
-        yearErrorDiv.textContent = '';
-        return;
+      let hasError = false;
+      // 年のチェック
+      if (startYearSelect && endYearSelect) {
+        const startYear = parseInt(startYearSelect.value, 10);
+        const endYear = parseInt(endYearSelect.value, 10);
+        if (!isNaN(startYear) && !isNaN(endYear) && endYear < startYear) {
+          yearErrorDiv.textContent = "終了年は開始年以降を選択してください。";
+          endYearSelect.focus();
+          hasError = true;
+        } else {
+          yearErrorDiv.textContent = '';
+        }
       }
 
-      if (endYear < startYear) {
+      // マグニチュードのチェック
+      if (minSlider && maxSlider) {
+        const minMag = parseFloat(minSlider.value);
+        const maxMag = parseFloat(maxSlider.value);
+        if (!isNaN(minMag) && !isNaN(maxMag) && maxMag < minMag) {
+          magErrorDiv.textContent = "最大マグニチュードは最小マグニチュード以上を選択してください。";
+          maxSlider.focus();
+          hasError = true;
+        } else {
+          magErrorDiv.textContent = '';
+        }
+      }
+
+      if (hasError) {
         e.preventDefault();
-        yearErrorDiv.textContent = "終了年は開始年以降を選択してください。";
-        endYearSelect.focus();
-      } else {
-        yearErrorDiv.textContent = '';
       }
     });
   }
@@ -284,12 +298,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
-
-
-
-
-
-
 
 
 
