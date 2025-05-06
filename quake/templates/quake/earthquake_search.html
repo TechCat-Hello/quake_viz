@@ -59,9 +59,10 @@ label {
 }
 
 .custom-select {
-  height: 10px !important;  
-  font-size: 24px !important;
-  padding: 16px !important;
+  height: 48px !important;       /* 適切な高さ */
+  font-size: 18px !important;    /* フォントサイズも調整 */
+  padding: 8px 16px !important;  /* 上下8px、左右16pxに */
+  line-height: 1.2;              /* 行の高さを調整 */
 }
 
 select {
@@ -181,15 +182,9 @@ p {
   <div id="mag-error"></div>
 
   <form id="earthquake-form" method="get" action="{% url 'earthquake_data' %}">
-
     <div class="form-group">
-      <label>{{ form.start_year.label }}</label>
-      {{ form.start_year|add_class:"custom-select" }}
-    </div>
-
-    <div class="form-group">
-      <label>{{ form.end_year.label }}</label>
-      {{ form.end_year|add_class:"custom-select" }}
+      <label>{{ form.year.label }}</label>
+      {{ form.year|add_class:"custom-select" }}
     </div>
 
     <div class="form-group">
@@ -253,26 +248,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 年・マグニチュードの前後チェック
   const form = document.getElementById('earthquake-form');
-  const startYearSelect = document.querySelector('[name="start_year"]');
-  const endYearSelect = document.querySelector('[name="end_year"]');
+  const yearSelect = document.querySelector('[name="year"]');
   const yearErrorDiv = document.getElementById('year-error');
   const magErrorDiv = document.getElementById('mag-error');
-
 
   if (form) {
     form.addEventListener('submit', function(e) {
       let hasError = false;
       // 年のチェック
-      if (startYearSelect && endYearSelect) {
-        const startYear = parseInt(startYearSelect.value, 10);
-        const endYear = parseInt(endYearSelect.value, 10);
-        if (!isNaN(startYear) && !isNaN(endYear) && endYear < startYear) {
-          yearErrorDiv.textContent = "終了年は開始年以降を選択してください。";
-          endYearSelect.focus();
-          hasError = true;
-        } else {
-          yearErrorDiv.textContent = '';
-        }
+      if (yearSelect && !yearSelect.value) {
+        yearErrorDiv.textContent = "検索する西暦を選択してください。";
+        yearSelect.focus();
+        hasError = true;
+      } else {
+        yearErrorDiv.textContent = '';
       }
 
       // マグニチュードのチェック

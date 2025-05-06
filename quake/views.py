@@ -68,8 +68,7 @@ def earthquake_data_view(request):
     url = 'https://earthquake.usgs.gov/fdsnws/event/1/query'
 
     # GETリクエストからパラメータ取得
-    start_year = safe_int(request.GET.get('start_year'), default=2000)  # デフォルト値は適宜
-    end_year = safe_int(request.GET.get('end_year'), default=2020)
+    year = request.GET.get('year', default=2000)   
     min_magnitude = safe_float(request.GET.get('min_magnitude'), default=3)
     max_magnitude = safe_float(request.GET.get('max_magnitude'), default=7)
     prefecture = request.GET.get('prefecture', '全国')
@@ -82,10 +81,6 @@ def earthquake_data_view(request):
         'maxlon': 150
     })
 
-    if int(start_year) > int(end_year):
-        start_year, end_year = end_year, start_year
-
-
     params = {
         'format': 'geojson',
         'limit': 20,
@@ -94,8 +89,8 @@ def earthquake_data_view(request):
         'minlongitude': coords['minlon'],
         'maxlongitude': coords['maxlon'],
         'orderby': 'time',
-        'starttime': f'{start_year}-01-01',
-        'endtime': f'{end_year}-12-31',
+        'starttime': f'{year}-01-01',
+        'endtime': f'{year}-12-31',
         'minmagnitude': min_magnitude,
         'maxmagnitude': max_magnitude,
         'minmagnitude': float(min_magnitude),
@@ -126,20 +121,19 @@ def earthquake_data_view(request):
             
     # --- 履歴をHistoryモデルに保存 ---
     if request.user.is_authenticated:
-        #keyword = f"{start_year}-{end_year}年, M{min_magnitude}-{max_magnitude}, {prefecture}"
+        year = safe_int(request.GET.get('year'), default=2000)
         History.objects.create(
             user=request.user,
-            start_year=start_year,
-            end_year=end_year,
+            start_year=year,  # start_yearに選択年を設定
+            end_year=year,    # end_yearにも同様に
             min_magnitude=min_magnitude,
             max_magnitude=max_magnitude,
             prefecture=prefecture
-    )
+        )
 
     return render(request, 'quake/earthquake_data.html', {
         'earthquakes': earthquakes,
-        'start_year': start_year,
-        'end_year': end_year,
+        'year': year,
         'min_magnitude': min_magnitude,
         'max_magnitude': max_magnitude,
         'prefecture': prefecture,
@@ -151,17 +145,23 @@ def mypage_view(request):
     histories = History.objects.filter(user=request.user).order_by('-searched_at')
     return render(request, 'mypage.html', {'histories': histories})
 
+YEAR_CHOICES = [(str(y), str(y)) for y in range(1900, 2101)]
+
 # 検索ページ：DBから検索し履歴も保存
 @login_required
 def earthquake_search(request):
     form = EarthquakeSearchForm(request.GET or None)
+    form.fields['year'].choices = YEAR_CHOICES
     earthquakes = []
     keyword = ''
 
     if form.is_valid():
-        keyword = form.cleaned_data['keyword']
-        earthquakes = EarthquakeData.objects.filter(location__icontains=keyword)
-
+        year = int(form.cleaned_data['year'])  # ← ここでint型に変換
+        keyword = form.cleaned_data.get('keyword', '')
+        earthquakes = EarthquakeData.objects.filter(
+            location__icontains=keyword,
+            date__year=year
+        )
         # 履歴保存（GETパラメータ経由の検索のみ。履歴リンククリックは除く）
         if request.GET.get('from_history') != '1':
             History.objects.create(

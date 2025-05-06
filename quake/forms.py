@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+import datetime
+
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
@@ -47,26 +49,11 @@ PREFECTURE_CHOICES = [
     ('鹿児島県', '鹿児島県'), ('沖縄県', '沖縄県'),
 ]
 
-class EarthquakeSearchForm(forms.Form):
-    start_year = forms.IntegerField(
-        label='開始年',
-        min_value=1900,
-        max_value=2100,
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control mb-4',
-            'placeholder': '例: 2011'
-        })
-    )
-    end_year = forms.IntegerField(
-        label='終了年',
-        min_value=1900,
-        max_value=2100,
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control mb-4',
-            'placeholder': '例: 2012'
-        })
-    )
+# 1900年から2100年までの年の選択肢を作成
+YEAR_CHOICES = [(str(y), str(y)) for y in range(1900, 2101)]
 
+class EarthquakeSearchForm(forms.Form):
+    year = forms.ChoiceField(choices=YEAR_CHOICES, label='年', required=True)
     min_magnitude = forms.FloatField(
         label='最小マグニチュード',
         widget=forms.NumberInput(attrs={
