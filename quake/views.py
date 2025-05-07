@@ -120,16 +120,22 @@ def earthquake_data_view(request):
             
     # --- 履歴をHistoryモデルに保存 ---
     if request.user.is_authenticated:
-        year = safe_int(request.GET.get('year'), default=2000)
-        History.objects.create(
-            user=request.user,
-            start_year=year,  # start_yearに選択年を設定
-            end_year=year,    # end_yearにも同様に
-            min_magnitude=min_magnitude,
-            max_magnitude=max_magnitude,
-            prefecture=prefecture
+        user_searched = (
+        str(request.GET.get('year')) != '2000' or
+        str(request.GET.get('min_magnitude')) != '3' or
+        str(request.GET.get('max_magnitude')) != '7' or
+        request.GET.get('prefecture') not in [None, '', '全国']
         )
-
+        if user_searched:
+            year_int = safe_int(request.GET.get('year'), default=2000)
+            History.objects.create(
+                user=request.user,
+                start_year=year_int,
+                end_year=year_int,
+                min_magnitude=min_magnitude,
+                max_magnitude=max_magnitude,
+                prefecture=prefecture
+            )
     # --- ページネーション処理 ---
     page = request.GET.get('page', 1)
     paginator = Paginator(earthquakes, 10)  # 1ページ10件
