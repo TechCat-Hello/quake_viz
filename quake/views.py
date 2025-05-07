@@ -6,7 +6,8 @@ import requests
 from django.views.generic import TemplateView
 from quakeapp.models import History
 from datetime import datetime, timezone
-#from .models import Earthquake
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 
 PREFECTURE_COORDINATES = {
@@ -83,7 +84,7 @@ def earthquake_data_view(request):
 
     params = {
         'format': 'geojson',
-        'limit': 20,
+        'limit': 1000,
         'minlatitude': coords['minlat'],
         'maxlatitude': coords['maxlat'],
         'minlongitude': coords['minlon'],
@@ -91,8 +92,6 @@ def earthquake_data_view(request):
         'orderby': 'time',
         'starttime': f'{year}-01-01',
         'endtime': f'{year}-12-31',
-        'minmagnitude': min_magnitude,
-        'maxmagnitude': max_magnitude,
         'minmagnitude': float(min_magnitude),
         'maxmagnitude': float(max_magnitude),
     
@@ -131,8 +130,21 @@ def earthquake_data_view(request):
             prefecture=prefecture
         )
 
+    # --- ページネーション処理 ---
+    page = request.GET.get('page', 1)
+    paginator = Paginator(earthquakes, 10)  # 1ページ10件
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+    
+    all_earthquakes = earthquakes
+
     return render(request, 'quake/earthquake_data.html', {
-        'earthquakes': earthquakes,
+        'all_earthquakes': all_earthquakes,  # 地図用に全データを渡す
+        'page_obj': page_obj,  # テーブル用にページネーション済みデータ
         'year': year,
         'min_magnitude': min_magnitude,
         'max_magnitude': max_magnitude,
