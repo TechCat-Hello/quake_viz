@@ -125,13 +125,13 @@
                 {% for history in histories %}
                     <tr>
                         <td>{{ history.searched_at|date:"Y年m月d日 H:i" }}</td>
-                        <td>{{ history.start_year }} ～ {{ history.end_year }}</td>
+                        <td>{{ history.start_year }}</td>
                         <td>{{ history.min_magnitude |floatformat:1 }} ～ {{ history.max_magnitude |floatformat:1 }}</td>
                         <td>{{ history.prefecture }}</td>
                         <td>
                             <form method="get" action="{% url 'earthquake_data' %}" class="history-btn d-inline">
-                                <input type="hidden" name="start_year" value="{{ history.start_year }}">
-                                <input type="hidden" name="end_year" value="{{ history.end_year }}">
+                                <input type="hidden" name="year" value="{{ history.start_year }}">
+                                <!--<input type="hidden" name="end_year" value="{{ history.end_year }}">-->
                                 <input type="hidden" name="min_magnitude" value="{{ history.min_magnitude }}">
                                 <input type="hidden" name="max_magnitude" value="{{ history.max_magnitude }}">
                                 <input type="hidden" name="prefecture" value="{{ history.prefecture }}">
