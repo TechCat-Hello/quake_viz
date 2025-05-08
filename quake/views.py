@@ -84,7 +84,7 @@ def earthquake_data_view(request):
 
     params = {
         'format': 'geojson',
-        'limit': 1000,
+        'limit': 2000,
         'minlatitude': coords['minlat'],
         'maxlatitude': coords['maxlat'],
         'minlongitude': coords['minlon'],
