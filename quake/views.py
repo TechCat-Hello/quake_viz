@@ -1,12 +1,13 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .forms import EarthquakeSearchForm, CustomUserCreationForm 
 from datetime import datetime, timezone
 import requests
 from django.views.generic import TemplateView
-from quakeapp.models import History
+from quake.models import History
 from datetime import datetime, timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from datetime import datetime, timezone
 
 
 
@@ -185,7 +186,7 @@ def earthquake_search(request):
             History.objects.create(
                 user=request.user,
                 keyword=keyword,
-                searched_at=datetime.now(timezone.utc)
+                searched_at=timezone.utc
             )
 
     return render(request, 'quake/earthquake_search.html', {
@@ -233,6 +234,11 @@ def safe_int(val, default=None):
     except (ValueError, TypeError):
         return default
 
+@login_required
+def delete_history(request, history_id):
+    history = get_object_or_404(History, id=history_id, user=request.user)
+    history.delete()
+    return redirect('mypage')  
 
 
 
