@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 from django.contrib.auth.decorators import login_required
 
 
+
+
 PREFECTURE_COORDINATES = {
     '北海道': {'minlat': 41.3, 'maxlat': 45.5, 'minlon': 139.3, 'maxlon': 145.8},
     '青森県': {'minlat': 40.3, 'maxlat': 41.5, 'minlon': 139.5, 'maxlon': 141.5},
@@ -124,7 +126,7 @@ def earthquake_data_view(request):
         })
             
     # --- 履歴をHistoryモデルに保存 ---
-    if request.user.is_authenticated and not from_history:
+    if request.user.is_authenticated and not from_history and 'page' not in request.GET:
         user_searched = (
         str(request.GET.get('year')) != '2000' or
         str(request.GET.get('min_magnitude')) != '3' or
@@ -133,14 +135,31 @@ def earthquake_data_view(request):
         )
         if user_searched:
             year_int = safe_int(request.GET.get('year'), default=2000)
-            History.objects.create(
+            now = datetime.now(timezone.utc)
+            
+            # 重複履歴があるか確認（同じ日時で同一内容）
+            exists = History.objects.filter(
                 user=request.user,
                 start_year=year_int,
                 end_year=year_int,
                 min_magnitude=min_magnitude,
                 max_magnitude=max_magnitude,
-                prefecture=prefecture
-            )
+                prefecture=prefecture,
+                searched_at__date=now.date(),       # 同じ日
+                searched_at__hour=now.hour,         # 同じ時間
+                searched_at__minute=now.minute,     # 同じ分（同時刻とみなす）
+            ).exists()
+
+            if not exists:
+                History.objects.create(
+                    user=request.user,
+                    start_year=year_int,
+                    end_year=year_int,
+                    min_magnitude=min_magnitude,
+                    max_magnitude=max_magnitude,
+                    prefecture=prefecture,
+                    searched_at=datetime.now(timezone.utc)
+                )
     # --- ページネーション処理 ---
     page = request.GET.get('page', 1)
     paginator = Paginator(earthquakes, 10)  # 1ページ10件
@@ -190,8 +209,9 @@ def earthquake_search(request):
             History.objects.create(
                 user=request.user,
                 keyword=keyword,
-                searched_at=timezone.utc
+                searched_at=datetime.timezone.utc
             )
+
 
     return render(request, 'quake/earthquake_search.html', {
         'form': form,
