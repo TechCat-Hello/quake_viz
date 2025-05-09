@@ -8,7 +8,7 @@ from quake.models import History
 from datetime import datetime, timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import datetime, timezone
-
+from django.contrib.auth.decorators import login_required
 
 
 PREFECTURE_COORDINATES = {
@@ -74,6 +74,10 @@ def earthquake_data_view(request):
     min_magnitude = safe_float(request.GET.get('min_magnitude'), default=3)
     max_magnitude = safe_float(request.GET.get('max_magnitude'), default=7)
     prefecture = request.GET.get('prefecture', '全国')
+
+    # 履歴からの再表示かどうかの判定
+    from_history = request.GET.get('from_history', 'false').lower() in ['1', 'true']
+
     
     # 都道府県から緯度経度を取得
     coords = PREFECTURE_COORDINATES.get(prefecture, {
@@ -120,7 +124,7 @@ def earthquake_data_view(request):
         })
             
     # --- 履歴をHistoryモデルに保存 ---
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and not from_history:
         user_searched = (
         str(request.GET.get('year')) != '2000' or
         str(request.GET.get('min_magnitude')) != '3' or
