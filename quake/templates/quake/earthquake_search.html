@@ -59,10 +59,10 @@ label {
 }
 
 .custom-select {
-  height: 48px !important;       /* 適切な高さ */
-  font-size: 18px !important;    /* フォントサイズも調整 */
-  padding: 8px 16px !important;  /* 上下8px、左右16pxに */
-  line-height: 1.2;              /* 行の高さを調整 */
+  height: 48px !important;       
+  font-size: 18px !important;    
+  padding: 8px 16px !important;  
+  line-height: 1.2;              
 }
 
 select {
@@ -136,7 +136,6 @@ p {
   color: #777;
 }
 
-/* ←マイページに戻る リンクのスタイル */
 .back-to-mypage {
   position: fixed;
   left: 24px;
@@ -165,7 +164,6 @@ p {
 </head>
 <body>
 
-<!-- 右上ログアウトボタン -->
 <div class="logout-btn-area">
   <form method="post" action="{% url 'logout' %}">
     {% csrf_token %}
@@ -221,11 +219,10 @@ p {
   {% endif %}
 </div>
 
-<!-- ←マイページに戻る リンク -->
 <a href="{% url 'mypage' %}" class="back-to-mypage">←マイページに戻る</a>
 
 <script>
-// スライダーの値をリアルタイムで表示
+//スライダーの値をリアルタイムで表示 
 document.addEventListener('DOMContentLoaded', function() {
   const minSlider = document.querySelector('[name=min_magnitude]');
   const maxSlider = document.querySelector('[name=max_magnitude]');

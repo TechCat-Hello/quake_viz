@@ -1,5 +1,6 @@
 Django==4.0
 requests==2.26.0
-psycopg2==2.9.3
-
-
+#psycopg2==2.9.3
+django-widget-tweaks
+gunicorn
+psycopg2-binary==2.9.3

@@ -109,6 +109,24 @@
       font-weight: normal;
       text-align: left;
     }
+
+    .signup-btn {
+      display: block;
+      padding: 10px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      margin-top: 10px;
+    }
+    .signup-btn:hover {
+      background-color: #1976D2;
+    }
+
   </style>
 
   <script>
@@ -152,9 +170,7 @@
 
     <div class="signup-link">
       <p>アカウントをお持ちでない方はこちら</p>
-      <a href="{% url 'signup' %}">
-        <button type="button">新規登録</button>
-      </a>
+      <a href="{% url 'signup' %}" class="signup-btn">新規登録</a>
     </div>
     
   </div>
