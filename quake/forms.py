@@ -28,7 +28,7 @@ class CustomUserCreationForm(UserCreationForm):
             user.save()
         return user
 
-# ---- 地震検索フォーム（余白強化） ----
+# ---- 地震検索フォーム ----
 PREFECTURE_CHOICES = [
     ('全国', '全国'),
     ('北海道', '北海道'), ('青森県', '青森県'), ('岩手県', '岩手県'),
@@ -49,7 +49,7 @@ PREFECTURE_CHOICES = [
     ('鹿児島県', '鹿児島県'), ('沖縄県', '沖縄県'),
 ]
 
-# 1900年から2100年までの年の選択肢を作成
+# 1900年から2100年までの年の選択肢
 YEAR_CHOICES = [(str(y), str(y)) for y in range(1900, 2101)]
 
 class EarthquakeSearchForm(forms.Form):

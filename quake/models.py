@@ -5,7 +5,6 @@ class Earthquake(models.Model):
     date = models.DateField()
     magnitude = models.FloatField()
     location = models.CharField(max_length=255)
-    # 他にも深さ、緯度経度など
 
 class History(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='histories')

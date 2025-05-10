@@ -5,12 +5,7 @@ from datetime import datetime, timezone
 import requests
 from django.views.generic import TemplateView
 from quake.models import History
-from datetime import datetime, timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from datetime import datetime, timezone
-from django.contrib.auth.decorators import login_required
-
-
 
 
 PREFECTURE_COORDINATES = {
@@ -79,7 +74,6 @@ def earthquake_data_view(request):
     # 履歴からの再表示かどうかの判定
     from_history = request.GET.get('from_history', 'false').lower() in ['1', 'true']
 
-    
     # 都道府県から緯度経度を取得
     coords = PREFECTURE_COORDINATES.get(prefecture, {
         'minlat': 20,
@@ -100,22 +94,19 @@ def earthquake_data_view(request):
         'endtime': f'{year}-12-31',
         'minmagnitude': float(min_magnitude),
         'maxmagnitude': float(max_magnitude),
-    
     }
-    
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        data = response.json()
         
-    #エラー処理
     try:
         response = requests.get(url, params=params, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+        else:
+            data = None
     except requests.exceptions.RequestException as e:
         earthquakes = []
         response = None
 
-    if response.status_code == 200:
-        data = response.json()
+    if data:
         for feature in data['features']:
             coords = feature['geometry']['coordinates']
             props = feature['properties']
@@ -127,7 +118,7 @@ def earthquake_data_view(request):
                     'time': datetime.fromtimestamp(props['time'] / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
                     'longitude': coords[0],
                     'latitude': coords[1],
-        })
+                })
             
     # --- 履歴をHistoryモデルに保存 ---
     if request.user.is_authenticated and not from_history and 'page' not in request.GET:
@@ -151,7 +142,7 @@ def earthquake_data_view(request):
                 prefecture=prefecture,
                 searched_at__date=now.date(),       # 同じ日
                 searched_at__hour=now.hour,         # 同じ時間
-                searched_at__minute=now.minute,     # 同じ分（同時刻とみなす）
+                searched_at__minute=now.minute,     # 同じ分
             ).exists()
 
             if not exists:
@@ -185,7 +176,7 @@ def earthquake_data_view(request):
         'prefecture': prefecture,
     })
 
-# マイページ（ログイン必須）
+# マイページ
 @login_required
 def mypage_view(request):
     histories = History.objects.filter(user=request.user).order_by('-searched_at')
@@ -202,7 +193,7 @@ def earthquake_search(request):
     keyword = ''
 
     if form.is_valid():
-        year = int(form.cleaned_data['year'])  # ← ここでint型に変換
+        year = int(form.cleaned_data['year'])  
         keyword = form.cleaned_data.get('keyword', '')
         earthquakes = EarthquakeData.objects.filter(
             location__icontains=keyword,
@@ -254,7 +245,6 @@ def signup_view(request):
 
 class EarthquakeData(TemplateView):
     template_name = 'earthquake_data.html'
-    # get_context_dataなどをオーバーライドして検索条件でデータ取得
 
 def safe_int(val, default=None):
     try:
