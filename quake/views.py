@@ -61,9 +61,8 @@ PREFECTURE_COORDINATES = {
     '宮崎県': {'minlat': 31.8, 'maxlat': 32.8, 'minlon': 131.0, 'maxlon': 131.6},
     '鹿児島県': {'minlat': 30.0, 'maxlat': 31.8, 'minlon': 129.2, 'maxlon': 131.0},
     '沖縄県': {'minlat': 24.0, 'maxlat': 26.8, 'minlon': 122.9, 'maxlon': 128.4},
-    '全国': {'minlat': 20, 'maxlat': 46, 'minlon': 122, 'maxlon': 150},
+    '全国': {'minlat': 24.0, 'maxlat': 46.0, 'minlon': 123.0, 'maxlon': 150.0},
 }
-
 
 # USGS APIから地震データを取得して地図に表示
 @login_required
@@ -104,6 +103,10 @@ def earthquake_data_view(request):
     
     }
     
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        
     #エラー処理
     try:
         response = requests.get(url, params=params, timeout=10)
@@ -117,12 +120,13 @@ def earthquake_data_view(request):
             coords = feature['geometry']['coordinates']
             props = feature['properties']
             place = props['place'].replace("?", "o")
-            earthquakes.append({
-                'place': place,
-                'magnitude': props['mag'],
-                'time': datetime.fromtimestamp(props['time'] / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
-                'longitude': coords[0],
-                'latitude': coords[1],
+            if ('Japan' in place) or any(pref in place for pref in PREFECTURE_COORDINATES.keys()):
+                earthquakes.append({
+                    'place': place,
+                    'magnitude': props['mag'],
+                    'time': datetime.fromtimestamp(props['time'] / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
+                    'longitude': coords[0],
+                    'latitude': coords[1],
         })
             
     # --- 履歴をHistoryモデルに保存 ---
