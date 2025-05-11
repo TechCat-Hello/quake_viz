@@ -91,10 +91,28 @@
             padding: 0 8px 32px 8px;
             max-width: 100%;
         }
-        .action-btns form {
-            display: inline-block;
-            margin-right: 5px;
+        .action-btns {
+          display: flex;
+          gap: 8px; 
         }
+        .action-btns form {
+          margin: 0; 
+          width: auto;
+          display: block;
+        }
+        @media (max-width: 600px) {
+          .action-btns {
+          display: block;
+          }
+          .action-btns form {
+          width: 100%;
+          margin-bottom: 8px;
+          }
+          .action-btns form:last-child {
+          margin-bottom: 0;
+          }
+        }
+        
     </style>
 </head>
 <body>
