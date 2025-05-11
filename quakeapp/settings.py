@@ -123,17 +123,6 @@ LOGIN_REDIRECT_URL = '/mypage/'
 #開発用のメールバックエンド
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-'''
-本番運用の場合（Gmail例）
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'あなたのGmailアドレス'
-EMAIL_HOST_PASSWORD = 'アプリパスワードやGmailのパスワード'
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-'''
-
 LOGIN_URL = '/login/'
 
 
