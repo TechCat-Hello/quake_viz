@@ -82,6 +82,29 @@ html, body {
 .text-danger.small {
     font-size: 0.875em;
 }
+@media (max-width: 600px) {
+  .auth-card {
+    padding: 1.2rem 0.5rem !important;
+  }
+  .auth-card h1,
+  .auth-card .h3 {
+    font-size: 1.5em !important;
+  }
+  .auth-card p,
+  .auth-card label,
+  .auth-card .form-text {
+    font-size: 1.1em !important;
+  }
+  .form-control {
+    font-size: 1.1em !important;
+    min-height: 48px;
+    padding: 10px 12px;
+  }
+  .btn-lg, .btn {
+    font-size: 1.15em !important;
+    padding: 14px 0 !important;
+  }
+}
 </style>
 {% endblock %}
 
