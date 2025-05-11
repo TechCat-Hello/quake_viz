@@ -20,7 +20,7 @@ USGS Earthquake API（アメリカ地質調査所の地震データAPI）を利�
 - USGS Earthquake APIから最新データ取得
 
 ## デプロイ先URL
-
+https://quake-viz.onrender.com
 
 ## 使用技術
 - Python / Django
