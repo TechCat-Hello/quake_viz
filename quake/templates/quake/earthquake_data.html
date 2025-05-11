@@ -18,19 +18,27 @@
     .back-link { color: #0d6efd; text-decoration: underline; cursor: pointer; font-weight: bold; font-size: 1rem; }
     .back-link:hover { text-decoration: none; }
     .logout-btn-area { position: absolute; top: 24px; right: 32px; z-index: 100; }
-    @media (max-width: 600px) { .logout-btn-area { top: 12px; right: 12px; } }
+    @media (max-width: 600px) { .logout-btn-area { display: none; } }
   </style>
 </head>
 <body>
-  <!-- 右上ログアウトボタン -->
-  <div class="logout-btn-area">
+  <!-- PC用（右上に絶対配置） -->
+<div class="logout-btn-area d-none d-sm-block">
+  <form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-secondary btn-sm">ログアウト</button>
+  </form>
+</div>
+
+<div class="container">
+  <!-- スマホ用（タイトル下に表示） -->
+  <div class="d-block d-sm-none mb-2" style="text-align:right;">
     <form method="post" action="{% url 'logout' %}">
       {% csrf_token %}
       <button type="submit" class="btn btn-outline-secondary btn-sm">ログアウト</button>
     </form>
   </div>
 
-  <div class="container">
     <h2 class="mb-4">検索結果：地震マップ</h2>
 
     <!-- 検索条件 -->
@@ -44,6 +52,7 @@
         </ul>
       </div>
     </div>
+</div>
 
     {% if not all_earthquakes %}
     <div class="alert alert-warning mt-4">
