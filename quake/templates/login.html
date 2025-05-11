@@ -143,12 +143,23 @@
     .signup-btn:hover {
       background-color: #1976D2;
     }
-    @media (max-width: 400px) {
-      .login-container {
-        width: 98vw;
-        padding: 12px;
-      }
+    @media (max-width: 600px) {
+      body {
+        align-items: flex-start;
+        height: auto;
+        min-height: 100vh;
     }
+      .login-container {
+        margin-top: 24px;
+        padding: 12px;
+        width: 98vw;
+      }
+  .app-title {
+    font-size: 1.1em;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
   </style>
   <script>
     function togglePassword() {
