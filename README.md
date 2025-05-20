@@ -48,6 +48,20 @@ https://quake-viz.onrender.com
 - Bootstrap 5
 - requests
 
+## 環境変数の設定
+このアプリでは、秘密情報や接続設定を .env ファイルで管理しています。  
+プロジェクトルートに .env ファイルを作成し、以下のように記述してください： 
+
+```bash
+DEBUG=True  # 本番では必ず False にしてください
+SECRET_KEY=your-secret-key-here
+ALLOWED_HOSTS=127.0.0.1,localhost
+DATABASE_URL=sqlite:///db.sqlite3  # 開発用
+```
+※ .env ファイルはセキュリティのため Git に含まれていません。  
+必要に応じて .env.example を参考にしてください（同梱されています）。
+
+
 ## セットアップ方法
 1.リポジトリをクローン
 ```bash
