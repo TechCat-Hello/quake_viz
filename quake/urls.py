@@ -4,6 +4,7 @@ from .views import mypage_view
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
+    path('earthquake/', views.earthquake_data_view, name='earthquake_data'),
     path('mypage/', mypage_view, name='mypage'),
     path('search/', views.earthquake_search, name='earthquake_search'),
     path('login/', views.login_view, name='login'),
