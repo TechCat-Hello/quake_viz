@@ -123,14 +123,16 @@ def earthquake_data_view(request):
     # --- 履歴をHistoryモデルに保存 ---
     if request.user.is_authenticated and not from_history and 'page' not in request.GET:
         user_searched = (
-        str(request.GET.get('year')) != '2000' or
-        str(request.GET.get('min_magnitude')) != '3' or
-        str(request.GET.get('max_magnitude')) != '7' or
-        request.GET.get('prefecture') not in [None, '', '全国']
+            'year' in request.GET or
+            'min_magnitude' in request.GET or
+            'max_magnitude' in request.GET or
+            'prefecture' in request.GET
         )
         if user_searched:
             year_int = safe_int(request.GET.get('year'), default=2000)
             now = datetime.now(timezone.utc)
+        # 検索履歴保存へ
+
             
             # 重複履歴があるか確認（同じ日時で同一内容）
             exists = History.objects.filter(
@@ -196,7 +198,7 @@ def earthquake_search(request):
         year = int(form.cleaned_data['year'])  
         keyword = form.cleaned_data.get('keyword', '')
         earthquakes = EarthquakeData.objects.filter(
-            location__icontains=keyword,
+            location=keyword,
             date__year=year
         )
         # 履歴保存（GETパラメータ経由の検索のみ。履歴リンククリックは除く）
@@ -242,15 +244,6 @@ def signup_view(request):
     else:
         form = CustomUserCreationForm()
     return render(request, 'signup.html', {'form': form})
-
-class EarthquakeData(TemplateView):
-    template_name = 'earthquake_data.html'
-
-def safe_int(val, default=None):
-    try:
-        return int(val)
-    except (ValueError, TypeError):
-        return default
 
 @login_required
 def delete_history(request, history_id):
