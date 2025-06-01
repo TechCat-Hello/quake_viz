@@ -57,6 +57,15 @@ DEBUG=True  # 本番では必ず False にしてください
 SECRET_KEY=your-secret-key-here
 ALLOWED_HOSTS=127.0.0.1,localhost
 DATABASE_URL=sqlite:///db.sqlite3  # 開発用
+
+# メール送信設定（本番環境で使用する場合）
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your_email@gmail.com
+EMAIL_HOST_PASSWORD=your_app_password  # Gmailのアプリパスワードなど
+DEFAULT_FROM_EMAIL=your_email@gmail.com
 ```
 ※ .env ファイルはセキュリティのため Git に含まれていません。  
 必要に応じて .env.example を参考にしてください（同梱されています）。
