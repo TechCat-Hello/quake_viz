@@ -198,7 +198,7 @@ def earthquake_search(request):
         year = int(form.cleaned_data['year'])  
         keyword = form.cleaned_data.get('keyword', '')
         earthquakes = EarthquakeData.objects.filter(
-            location=keyword,
+            location__icontains=keyword,
             date__year=year
         )
         # 履歴保存（GETパラメータ経由の検索のみ。履歴リンククリックは除く）
