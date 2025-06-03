@@ -6,6 +6,20 @@
     <div class="row justify-content-center">
         <div class="col-12 col-sm-10 col-md-8 col-lg-6">
             <div class="auth-card" style="padding: 2.5rem 2rem;">
+                <h1 class="h3 mb-3 fw-bold">新規登録</h1>
+                <p class="text-danger fw-bold">{{ message }}</p>
+                <p class="text-muted mt-4">
+                    既にアカウントをお持ちの方は  
+                    <a href="{% url 'login' %}" class="text-decoration-none">ログインはこちら</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+                <!--
+                以下、新規登録フォームのコード（現在は新規登録不可にしているため、使用していません）
                 <div class="text-center" style="margin-bottom: 2.5rem;">
                     <h1 class="h3 mb-3 fw-bold">新規登録</h1>
                     <p class="text-muted">
@@ -106,6 +120,8 @@ html, body {
   }
 }
 </style>
+-->
+
 {% endblock %}
 
 

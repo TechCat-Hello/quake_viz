@@ -236,15 +236,20 @@ def login_view(request):
 
 # 新規登録ページ
 def signup_view(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('login')
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'signup.html', {'form': form})
+    message = "このアプリでは新規登録はできません"
+    return render(request, 'signup.html', {'message': message})
 
+    #新規登録を無効化
+    # if request.method == 'POST':
+    #     form = CustomUserCreationForm(request.POST)
+    #     if form.is_valid():
+    #         form.save()
+    #         return redirect('login')
+    # else:
+    #     form = CustomUserCreationForm()
+    # return render(request, 'signup.html', {'form': form})
+
+    
 @login_required
 def delete_history(request, history_id):
     history = get_object_or_404(History, id=history_id, user=request.user)
