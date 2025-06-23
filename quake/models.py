@@ -13,7 +13,7 @@ class History(models.Model):
     end_year = models.IntegerField()
     min_magnitude = models.FloatField()
     max_magnitude = models.FloatField()
-    prefecture = models.CharField(max_length=100)
+    prefecture = models.CharField(max_length=30)
 
     def __str__(self):
         return f'{self.user.username} - {self.searched_at.strftime("%Y-%m-%d %H:%M")}'
