@@ -186,34 +186,14 @@ def mypage_view(request):
 
 YEAR_CHOICES = [(str(y), str(y)) for y in range(1900, 2101)]
 
-# 検索ページ：DBから検索し履歴も保存
+# 検索ページ：検索フォームを表示（実際の検索・履歴保存はearthquake_dataビューが担当）
 @login_required
 def earthquake_search(request):
     form = EarthquakeSearchForm(request.GET or None)
     form.fields['year'].choices = YEAR_CHOICES
-    earthquakes = []
-    keyword = ''
-
-    if form.is_valid():
-        year = int(form.cleaned_data['year'])  
-        keyword = form.cleaned_data.get('keyword', '')
-        earthquakes = EarthquakeData.objects.filter(
-            location__icontains=keyword,
-            date__year=year
-        )
-        # 履歴保存（GETパラメータ経由の検索のみ。履歴リンククリックは除く）
-        if request.GET.get('from_history') != '1':
-            History.objects.create(
-                user=request.user,
-                keyword=keyword,
-                searched_at=datetime.timezone.utc
-            )
-
 
     return render(request, 'quake/earthquake_search.html', {
         'form': form,
-        'earthquakes': earthquakes,
-        'keyword': keyword,
     })
 
 def safe_int(val, default=None):

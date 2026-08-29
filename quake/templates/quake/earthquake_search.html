@@ -198,18 +198,6 @@ p {
     <button type="submit">検索</button>
   </form>
 
-  {% if results %}
-    <h3>検索結果</h3>
-    <ul>
-      {% for quake in results %}
-        <li>{{ quake.date }} - M{{ quake.magnitude }} - {{ quake.location }}</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    {% if form.is_bound %}
-      <p>該当する地震データは見つかりませんでした。</p>
-    {% endif %}
-  {% endif %}
 </div>
 
 <a href="{% url 'mypage' %}" class="back-to-mypage">←マイページに戻る</a>
