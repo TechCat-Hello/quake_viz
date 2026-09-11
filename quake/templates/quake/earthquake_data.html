@@ -153,10 +153,9 @@
     const bounds = [[20.4, 122.5], [45.6, 147.0]];
     map.fitBounds(bounds);
 
-    // カラー地図タイル（OpenStreetMap）
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      subdomains: 'abc',
+    // カラー地図タイル（Esri World Street Map）
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
       maxZoom: 19
     }).addTo(map);
 
