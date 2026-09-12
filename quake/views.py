@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .forms import EarthquakeSearchForm, CustomUserCreationForm 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import requests
 from django.views.generic import TemplateView
 from quake.models import History
@@ -145,7 +145,12 @@ def earthquake_data_view(request):
         # 検索履歴保存へ
 
             
-            # 重複履歴があるか確認（同じ日時で同一内容）
+            # 重複履歴があるか確認（直近1分以内に同一条件の検索がないか）
+            # ※ 以前は searched_at__date/__hour/__minute で比較していたが、
+            #   settings.TIME_ZONE='Asia/Tokyo' の下ではDB側の日時比較がJSTに
+            #   変換される一方、ここで使うnowはUTCのままだったため、時刻がずれて
+            #   重複判定が機能していなかった（常に新規保存されてしまう）。
+            #   タイムゾーン変換の影響を受けない時間幅指定に変更して修正。
             exists = History.objects.filter(
                 user=request.user,
                 start_year=year_int,
@@ -153,9 +158,7 @@ def earthquake_data_view(request):
                 min_magnitude=min_magnitude,
                 max_magnitude=max_magnitude,
                 prefecture=prefecture,
-                searched_at__date=now.date(),       # 同じ日
-                searched_at__hour=now.hour,         # 同じ時間
-                searched_at__minute=now.minute,     # 同じ分
+                searched_at__gte=now - timedelta(minutes=1),
             ).exists()
 
             if not exists:
