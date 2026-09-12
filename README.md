@@ -1,5 +1,6 @@
 # 都道府県別　地震可視化アプリ
 
+[![Tests](https://github.com/TechCat-Hello/quake_viz/actions/workflows/test.yml/badge.svg)](https://github.com/TechCat-Hello/quake_viz/actions/workflows/test.yml)
 
 ## プロジェクト概要
 日本全国・都道府県別の地震データを検索・可視化できるDjango製Webアプリです。  
