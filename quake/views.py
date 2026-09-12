@@ -8,6 +8,10 @@ from quake.models import History
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
+# 各都道府県の緯度経度による矩形（バウンディングボックス）近似。
+# 都道府県境界は実際には複雑な形状のため、この矩形は隣接県や海域と一部重なる。
+# そのため境界付近の地震は、選択した都道府県以外の場所として表示される場合がある
+# （既知の制約。正確な絞り込みには都道府県境界のポリゴンデータが必要）。
 PREFECTURE_COORDINATES = {
     '北海道': {'minlat': 41.3, 'maxlat': 45.5, 'minlon': 139.3, 'maxlon': 145.8},
     '青森県': {'minlat': 40.3, 'maxlat': 41.5, 'minlon': 139.5, 'maxlon': 141.5},
@@ -111,14 +115,21 @@ def earthquake_data_view(request):
             coords = feature['geometry']['coordinates']
             props = feature['properties']
             place = props['place'].replace("?", "o")
-            if ('Japan' in place) or any(pref in place for pref in PREFECTURE_COORDINATES.keys()):
-                earthquakes.append({
-                    'place': place,
-                    'magnitude': props['mag'],
-                    'time': datetime.fromtimestamp(props['time'] / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
-                    'longitude': coords[0],
-                    'latitude': coords[1],
-                })
+            # 都道府県を指定した場合は、API呼び出し時点で対象の矩形範囲（bbox）に
+            # 絞り込み済みなのでここでの追加判定は不要。
+            # 「全国」選択時のみ、巨大なbboxに混ざる海外（韓国・台湾・ロシア沿岸など）の
+            # 地震を除外するため 'Japan' を含むものだけに絞る。
+            # ※ 都道府県はPREFECTURE_COORDINATESの緯度経度矩形による近似のため、
+            #   境界付近では隣接県や海域の地震が含まれる場合がある（既知の制約。README参照）
+            if prefecture == '全国' and 'Japan' not in place:
+                continue
+            earthquakes.append({
+                'place': place,
+                'magnitude': props['mag'],
+                'time': datetime.fromtimestamp(props['time'] / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
+                'longitude': coords[0],
+                'latitude': coords[1],
+            })
             
     # --- 履歴をHistoryモデルに保存 ---
     if request.user.is_authenticated and not from_history and 'page' not in request.GET:

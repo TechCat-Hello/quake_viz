@@ -113,6 +113,10 @@ python manage.py runserver
 6.ブラウザでアクセス  
 http://127.0.0.1:8000/ にアクセス  
   
+## 今後の課題
+- **都道府県の絞り込み精度**：現在は各都道府県を緯度経度の矩形（バウンディングボックス）で近似しているため、境界付近では隣接県や海域の地震データが混ざる場合があります。より正確に絞り込むには、都道府県境界のポリゴンデータを用いたpoint-in-polygon判定への置き換えが必要です。
+- 検索機能まわりの自動テストの拡充
+
 ## License
 This project is licensed under the MIT License.    
 See the [LICENSE](LICENSE) file for details.
