@@ -54,7 +54,11 @@
     </div>
 </div>
 
-    {% if not all_earthquakes %}
+    {% if api_error %}
+    <div class="alert alert-danger mt-4">
+      地震データの取得に失敗しました。時間をおいて再度お試しください。
+    </div>
+    {% elif not all_earthquakes %}
     <div class="alert alert-warning mt-4">
       該当する地震データが見つかりませんでした
     </div>

@@ -63,20 +63,14 @@ PREFECTURE_COORDINATES = {
     '全国': {'minlat': 24.0, 'maxlat': 46.0, 'minlon': 123.0, 'maxlon': 150.0},
 }
 
-# USGS APIから地震データを取得して地図に表示
-@login_required
-def earthquake_data_view(request):
-    earthquakes = []
+def fetch_earthquakes(prefecture, year, min_magnitude, max_magnitude):
+    """指定した都道府県・年・マグニチュード範囲の地震データをUSGS APIから取得する
+
+    戻り値は (地震データのリスト, APIエラーが発生したか) のタプル。
+    「検索条件に合う地震が0件だった」のか「APIへの接続自体に失敗した」のかを
+    呼び出し側（テンプレート）で区別できるようにするため、エラー有無を分けて返す。
+    """
     url = 'https://earthquake.usgs.gov/fdsnws/event/1/query'
-
-    # GETリクエストからパラメータ取得
-    year = request.GET.get('year', default=2000)   
-    min_magnitude = safe_float(request.GET.get('min_magnitude'), default=3)
-    max_magnitude = safe_float(request.GET.get('max_magnitude'), default=7)
-    prefecture = request.GET.get('prefecture', '全国')
-
-    # 履歴からの再表示かどうかの判定
-    from_history = request.GET.get('from_history', 'false').lower() in ['1', 'true']
 
     # 都道府県から緯度経度を取得
     coords = PREFECTURE_COORDINATES.get(prefecture, {
@@ -99,20 +93,26 @@ def earthquake_data_view(request):
         'minmagnitude': float(min_magnitude),
         'maxmagnitude': float(max_magnitude),
     }
-        
+
+    api_error = False
     try:
         response = requests.get(url, params=params, timeout=10)
         if response.status_code == 200:
             data = response.json()
         else:
             data = None
-    except requests.exceptions.RequestException as e:
-        earthquakes = []
-        response = None
+            api_error = True
+    except requests.exceptions.RequestException:
+        # ネットワークエラー・タイムアウト時は空の結果として扱う
+        # （以前はここで data が代入されず、直後の `if data:` で
+        #   UnboundLocalError が発生し500エラーになっていた）
+        data = None
+        api_error = True
 
+    earthquakes = []
     if data:
         for feature in data['features']:
-            coords = feature['geometry']['coordinates']
+            point = feature['geometry']['coordinates']
             props = feature['properties']
             place = props['place'].replace("?", "o")
             # 都道府県を指定した場合は、API呼び出し時点で対象の矩形範囲（bbox）に
@@ -127,50 +127,69 @@ def earthquake_data_view(request):
                 'place': place,
                 'magnitude': props['mag'],
                 'time': datetime.fromtimestamp(props['time'] / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
-                'longitude': coords[0],
-                'latitude': coords[1],
+                'longitude': point[0],
+                'latitude': point[1],
             })
-            
-    # --- 履歴をHistoryモデルに保存 ---
-    if request.user.is_authenticated and not from_history and 'page' not in request.GET:
-        user_searched = (
-            'year' in request.GET or
-            'min_magnitude' in request.GET or
-            'max_magnitude' in request.GET or
-            'prefecture' in request.GET
+    return earthquakes, api_error
+
+
+def save_search_history(user, year_int, min_magnitude, max_magnitude, prefecture):
+    """検索条件をHistoryモデルに保存する（直近1分以内の同一条件は重複保存しない）"""
+    now = datetime.now(timezone.utc)
+
+    # 重複履歴があるか確認（直近1分以内に同一条件の検索がないか）
+    # ※ 以前は searched_at__date/__hour/__minute で比較していたが、
+    #   settings.TIME_ZONE='Asia/Tokyo' の下ではDB側の日時比較がJSTに
+    #   変換される一方、ここで使うnowはUTCのままだったため、時刻がずれて
+    #   重複判定が機能していなかった（常に新規保存されてしまう）。
+    #   タイムゾーン変換の影響を受けない時間幅指定に変更して修正。
+    exists = History.objects.filter(
+        user=user,
+        start_year=year_int,
+        end_year=year_int,
+        min_magnitude=min_magnitude,
+        max_magnitude=max_magnitude,
+        prefecture=prefecture,
+        searched_at__gte=now - timedelta(minutes=1),
+    ).exists()
+
+    if not exists:
+        History.objects.create(
+            user=user,
+            start_year=year_int,
+            end_year=year_int,
+            min_magnitude=min_magnitude,
+            max_magnitude=max_magnitude,
+            prefecture=prefecture,
+            searched_at=now,
         )
-        if user_searched:
-            year_int = safe_int(request.GET.get('year'), default=2000)
-            now = datetime.now(timezone.utc)
-        # 検索履歴保存へ
 
-            
-            # 重複履歴があるか確認（直近1分以内に同一条件の検索がないか）
-            # ※ 以前は searched_at__date/__hour/__minute で比較していたが、
-            #   settings.TIME_ZONE='Asia/Tokyo' の下ではDB側の日時比較がJSTに
-            #   変換される一方、ここで使うnowはUTCのままだったため、時刻がずれて
-            #   重複判定が機能していなかった（常に新規保存されてしまう）。
-            #   タイムゾーン変換の影響を受けない時間幅指定に変更して修正。
-            exists = History.objects.filter(
-                user=request.user,
-                start_year=year_int,
-                end_year=year_int,
-                min_magnitude=min_magnitude,
-                max_magnitude=max_magnitude,
-                prefecture=prefecture,
-                searched_at__gte=now - timedelta(minutes=1),
-            ).exists()
 
-            if not exists:
-                History.objects.create(
-                    user=request.user,
-                    start_year=year_int,
-                    end_year=year_int,
-                    min_magnitude=min_magnitude,
-                    max_magnitude=max_magnitude,
-                    prefecture=prefecture,
-                    searched_at=datetime.now(timezone.utc)
-                )
+# USGS APIから地震データを取得して地図に表示
+@login_required
+def earthquake_data_view(request):
+    # GETリクエストからパラメータ取得
+    year = request.GET.get('year', default=2000)
+    min_magnitude = safe_float(request.GET.get('min_magnitude'), default=3)
+    max_magnitude = safe_float(request.GET.get('max_magnitude'), default=7)
+    prefecture = request.GET.get('prefecture', '全国')
+
+    # 履歴からの再表示かどうかの判定
+    from_history = request.GET.get('from_history', 'false').lower() in ['1', 'true']
+
+    earthquakes, api_error = fetch_earthquakes(prefecture, year, min_magnitude, max_magnitude)
+
+    # --- 履歴をHistoryモデルに保存 ---
+    user_searched = (
+        'year' in request.GET or
+        'min_magnitude' in request.GET or
+        'max_magnitude' in request.GET or
+        'prefecture' in request.GET
+    )
+    if request.user.is_authenticated and not from_history and 'page' not in request.GET and user_searched:
+        year_int = safe_int(request.GET.get('year'), default=2000)
+        save_search_history(request.user, year_int, min_magnitude, max_magnitude, prefecture)
+
     # --- ページネーション処理 ---
     page = request.GET.get('page', 1)
     paginator = Paginator(earthquakes, 10)  # 1ページ10件
@@ -180,16 +199,15 @@ def earthquake_data_view(request):
         page_obj = paginator.page(1)
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
-    
-    all_earthquakes = earthquakes
 
     return render(request, 'quake/earthquake_data.html', {
-        'all_earthquakes': all_earthquakes,  # 地図用に全データを渡す
+        'all_earthquakes': earthquakes,  # 地図用に全データを渡す
         'page_obj': page_obj,  # テーブル用にページネーション済みデータ
         'year': year,
         'min_magnitude': min_magnitude,
         'max_magnitude': max_magnitude,
         'prefecture': prefecture,
+        'api_error': api_error,  # USGS APIへの接続自体に失敗したか（0件と区別して表示するため）
     })
 
 # マイページ

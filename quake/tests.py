@@ -1,5 +1,6 @@
 from unittest.mock import patch, Mock
 
+import requests
 from django.contrib.auth.models import User
 from django.test import TestCase
 
@@ -47,6 +48,30 @@ class EarthquakeDataViewTest(TestCase):
         self.assertEqual(params['maxlatitude'], expected['maxlat'])
         self.assertEqual(params['minlongitude'], expected['minlon'])
         self.assertEqual(params['maxlongitude'], expected['maxlon'])
+
+    @patch('quake.views.requests.get')
+    def test_usgs_request_failure_does_not_crash_the_page(self, mock_get):
+        # USGSへのリクエストが失敗（タイムアウト等）しても500エラーにならず、
+        # 「0件ヒット」ではなく取得失敗である旨がテンプレートに伝わることを確認する
+        mock_get.side_effect = requests.exceptions.Timeout('timed out')
+
+        response = self.client.get('/earthquake/', {'prefecture': '東京都'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['all_earthquakes'], [])
+        self.assertTrue(response.context['api_error'])
+        self.assertContains(response, '地震データの取得に失敗しました')
+
+    @patch('quake.views.requests.get')
+    def test_no_matching_results_is_not_reported_as_api_error(self, mock_get):
+        # APIは正常に応答したが該当件数が0件のケース。
+        # api_error は立てず、「見つかりませんでした」の通常メッセージになることを確認する
+        mock_get.return_value = make_usgs_response([])
+
+        response = self.client.get('/earthquake/', {'prefecture': '東京都'})
+
+        self.assertFalse(response.context['api_error'])
+        self.assertContains(response, '該当する地震データが見つかりませんでした')
 
     @patch('quake.views.requests.get')
     def test_zenkoku_excludes_non_japan_results(self, mock_get):
