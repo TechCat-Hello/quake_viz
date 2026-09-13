@@ -1,11 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-class Earthquake(models.Model):
-    date = models.DateField()
-    magnitude = models.FloatField()
-    location = models.CharField(max_length=255)
-
 class History(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='histories')
     searched_at = models.DateTimeField(auto_now_add=True)
