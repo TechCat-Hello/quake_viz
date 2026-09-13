@@ -12,7 +12,10 @@ jobs:
 
     env:
       SECRET_KEY: ci-test-secret-key
-      DEBUG: "False"
+      # DEBUG=Falseにすると本番向けのSECURE_SSL_REDIRECT等が有効になり、
+      # HTTPでアクセスするテストクライアントが全てHTTPSへの301リダイレクトを
+      # 受け取ってしまい失敗するため、テスト実行時はTrueにする
+      DEBUG: "True"
       DATABASE_URL: sqlite:///db.sqlite3
 
     steps:

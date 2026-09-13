@@ -135,5 +135,19 @@ LOGIN_REDIRECT_URL = '/mypage/'
 
 LOGIN_URL = '/login/'
 
+# 本番環境向けのセキュリティ設定
+# DEBUG=False（本番想定）のときのみ有効にする。
+# ローカル開発（python manage.py runserver、HTTPS未対応）に影響しないようにするため。
+if not DEBUG:
+    # Render等のリバースプロキシ経由ではDjangoから見ると常にHTTP接続になるため、
+    # プロキシが付与する X-Forwarded-Proto ヘッダーでHTTPS判定できるようにする
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # HSTSはまず短い期間で様子を見て、問題なければ延長する
+    # （設定を誤るとブラウザが一定期間HTTPSアクセスを強制し続けるため）
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7  # 1週間
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 
